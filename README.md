@@ -1,6 +1,6 @@
-# flutter_application_1
+# MessengerApp
 
-A new Flutter project.
+Это фронтенд для моего бэкенда: https://github.com/Levletsplay0/Messenger
 
 ## Getting Started
 
