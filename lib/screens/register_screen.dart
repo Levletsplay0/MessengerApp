@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _handleRegister() {
+  Future<void> _register() async {
     String email = _emailController.text.trim();
     String username = _usernameController.text.trim();
     String password = _passwordController.text;
@@ -52,13 +53,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Вы зарегистрированны: Логин: $username, Почта: $email'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 1),
-      ),
-    );
+    try {
+      final api = ApiService();
+      final response = await api.register(username, password, email);
+      bool isSuccess = response["success"];
+      String message = response["message"];
+      if (isSuccess == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Успех: $message'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+      else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка: $message'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    }
+    catch(e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Ошибка: $e'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
   }
 
   @override
@@ -70,7 +97,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: Center(
         child: Column(
           children: [
-            SizedBox(height: 25,),
+            const SizedBox(height: 25,),
+            Icon(Icons.person_add, size: 75,),
+            const SizedBox(height: 5,),
             Text(
               "Регистрация",
               style: TextStyle(
@@ -78,7 +107,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 fontWeight: FontWeight.bold
               ),
             ),
-            SizedBox(height: 75,),
+            SizedBox(height: 25,),
             SizedBox(
               width: 300,
               child: TextField(
@@ -146,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               width: 300,
               child: 
                 OutlinedButton(
-                  onPressed: _handleRegister,
+                  onPressed: _register,
                   child: const Text('Зарегистрироваться'),
                 ),
             ),

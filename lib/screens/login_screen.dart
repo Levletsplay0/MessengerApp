@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'register_screen.dart';
+import '../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  Future<void> _login() async {
     String username = _usernameController.text.trim();
     String password = _passwordController.text;
 
@@ -32,16 +33,44 @@ class _LoginScreenState extends State<LoginScreen> {
           duration: Duration(seconds: 1),
         ),
       );
-      return;
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Вход выполнен: $username'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 1),
-      ),
-    );
+    try {
+      final api = ApiService();
+      final response = await api.login(username, password);
+      bool isSuccess = response["success"];
+      String message = response["message"];
+      String token = response["data"]["auth_token"];
+      if (isSuccess == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Успех: $message, токен: $token'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+      else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка: $message'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    }
+    catch(e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Ошибка: $e'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
+    
+    
+    
   }
 
   @override
@@ -54,6 +83,8 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           children: [
             const SizedBox(height: 25,),
+            Icon(Icons.login, size: 75,),
+            const SizedBox(height: 5,),
             Text(
               "Вход",
               style: TextStyle(
@@ -61,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 fontWeight: FontWeight.bold
               ),
             ),
-            const SizedBox(height: 75,),
+            const SizedBox(height: 25,),
             SizedBox(
               width: 300,
               child: TextField(
@@ -109,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
               width: 300,
               child: 
                 OutlinedButton(
-                  onPressed: _handleLogin,
+                  onPressed: _login,
                   
                   child: const Text('Войти'),
                 ),
