@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'register_screen.dart';
 import '../services/api_service.dart';
 
@@ -39,8 +40,9 @@ class _LoginScreenState extends State<LoginScreen> {
       final response = await api.login(username, password);
       bool isSuccess = response["success"];
       String message = response["message"];
-      String token = response["data"]["auth_token"];
+      
       if (isSuccess == true) {
+        String token = response["data"]["auth_token"];
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Успех: $message, токен: $token'),
@@ -155,6 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 GestureDetector(
                   onTap: () {
+                    HapticFeedback.mediumImpact();
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => const RegisterScreen()),
