@@ -63,6 +63,27 @@ class ApiService {
     }
     
   }
+
+  Future<Map<String, dynamic>> getGroups(String token) async {
+    final Uri url = Uri.parse('$baseUrl/groups');
+    
+    try{
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json', 
+          "auth-token": token
+        },
+        
+      );
+
+      return jsonDecode(response.body);
+    }
+    catch(e){
+      throw Exception('Ошибка: $e');
+    }
+    
+  }
   
 
 

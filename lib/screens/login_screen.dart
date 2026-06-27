@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_1/screens/chats_screen.dart';
 import 'register_screen.dart';
 import '../services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -43,13 +45,27 @@ class _LoginScreenState extends State<LoginScreen> {
       
       if (isSuccess == true) {
         String token = response["data"]["auth_token"];
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Успех: $message, токен: $token'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 1),
-          ),
+        /* 
+        Получить:
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? token = prefs.getString('auth_token');
+
+        if (token != null) {
+          // Токен найден, можно использовать его для API-запросов
+        }
+
+        удаление:
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.remove('auth_token');
+        */
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', token);
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ChatsScreen()),
         );
+        
       }
       else {
         ScaffoldMessenger.of(context).showSnackBar(
