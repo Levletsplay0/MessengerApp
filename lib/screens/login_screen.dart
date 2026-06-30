@@ -45,19 +45,6 @@ class _LoginScreenState extends State<LoginScreen> {
       
       if (isSuccess == true) {
         String token = response["data"]["auth_token"];
-        /* 
-        Получить:
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? token = prefs.getString('auth_token');
-
-        if (token != null) {
-          // Токен найден, можно использовать его для API-запросов
-        }
-
-        удаление:
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.remove('auth_token');
-        */
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', token);
 
@@ -117,10 +104,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _usernameController,
                 decoration: InputDecoration(
                   labelText: "Имя пользователя",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  prefixIcon: const Icon(Icons.person)
+                  prefixIcon: const Icon(Icons.person),
+                  fillColor: Colors.transparent,
                 ),
                 
               ),
@@ -133,9 +118,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
                   labelText: "Пароль",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
                   prefixIcon: const Icon(Icons.password),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -149,6 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       });
                     },
                   ),
+                  fillColor: Colors.transparent,
                 ),
                 
               ),

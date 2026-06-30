@@ -42,7 +42,7 @@ class ApiService {
     
   }
 
-  Future<Map<String, dynamic>> register(String username, String password, String email) async {
+  Future<Map<String, dynamic>> register(String username, String password, String email, String name, String lastName) async {
     final Uri url = Uri.parse('$baseUrl/register');
     
     try{
@@ -52,7 +52,9 @@ class ApiService {
         body: jsonEncode({
           "username": username,
           "password": password,
-          "email": email
+          "email": email,
+          "name": name,
+          "last_name": lastName
         }),
       );
 

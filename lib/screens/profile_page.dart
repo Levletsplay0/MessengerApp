@@ -15,6 +15,8 @@ class _ProfilePageState extends State<ProfilePage> {
   
   String _username = '';
   String _email = '';
+  String _name = '';
+  String _lastName = '';
   String? _avatarPath;
   String? _description;
 
@@ -55,6 +57,8 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           _username = data["username"] ?? '';
           _email = data["email"] ?? '';
+          _name = data["name"] ?? '';
+          _lastName = data["last_name"] ?? '';
           _avatarPath = data["avatar_path"];
           _description = data["description"];
           _isLoading = false;
@@ -115,7 +119,7 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildAvatar(),
             const SizedBox(height: 15),
             Text(
-              _username,
+              "$_name $_lastName",
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ],

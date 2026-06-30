@@ -16,6 +16,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
 
   
   @override
@@ -24,6 +26,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _nameController.dispose();
+    _lastNameController.dispose();
     super.dispose();
   }
 
@@ -32,8 +36,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     String username = _usernameController.text.trim();
     String password = _passwordController.text;
     String confirmPassword = _confirmPasswordController.text;
+    String name = _nameController.text;
+    String lastName = _lastNameController.text;
 
-    if (email.isEmpty || username.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+
+    if (email.isEmpty || username.isEmpty || password.isEmpty || confirmPassword.isEmpty || name.isEmpty || lastName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Заполните все поля'),
@@ -56,7 +63,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final api = ApiService();
-      final response = await api.register(username, password, email);
+      final response = await api.register(username, password, email, name, lastName);
       bool isSuccess = response["success"];
       String message = response["message"];
       if (isSuccess == true) {
@@ -116,7 +123,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _emailController,
                 decoration: InputDecoration(
                   labelText: "Почта",
-                  prefixIcon: Icon(Icons.email)
+                  prefixIcon: Icon(Icons.email),
+                  fillColor: Colors.transparent,
                 ),
               ),
             ),
@@ -127,7 +135,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _usernameController,
                 decoration: InputDecoration(
                   labelText: "Имя пользователя",
-                  prefixIcon: const Icon(Icons.person)
+                  prefixIcon: const Icon(Icons.person),
+                  fillColor: Colors.transparent,
                 ),
                 
               ),
@@ -153,6 +162,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       });
                     },
                   ),
+                  fillColor: Colors.transparent,
                 ),
                 
               ),
@@ -166,6 +176,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 decoration: InputDecoration(
                   labelText: "Повторите пароль",
                   prefixIcon: const Icon(Icons.password),
+                  fillColor: Colors.transparent,
+                  
+                ),
+                
+              ),
+            ),
+            SizedBox(height: 25,),
+            SizedBox(
+              width: 300,
+              child: TextField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: "Имя",
+                  prefixIcon: const Icon(Icons.text_format_outlined),
+                  fillColor: Colors.transparent,
+                  
+                ),
+                
+              ),
+            ),
+            SizedBox(height: 25,),
+            SizedBox(
+              width: 300,
+              child: TextField(
+                controller: _lastNameController,
+                decoration: InputDecoration(
+                  labelText: "Фамилия",
+                  prefixIcon: const Icon(Icons.text_format_outlined),
+                  fillColor: Colors.transparent,
                   
                 ),
                 
