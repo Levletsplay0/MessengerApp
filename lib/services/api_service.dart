@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
@@ -106,6 +107,52 @@ class ApiService {
       throw Exception('Ошибка: $e');
     }
     
+  }
+
+
+  Future<Map<String, dynamic>> deleteAvatar(String token) async {
+    final Uri url = Uri.parse('$baseUrl/users/me/avatar');
+    
+    try{
+      final response = await http.delete(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+        
+      );
+
+      return jsonDecode(response.body);
+    }
+    catch(e){
+      throw Exception('Ошибка: $e');
+    }
+    
+  }
+
+  Future<Map<String, dynamic>> changeAvatar(String token, File imageFile) async {
+    final Uri url = Uri.parse('$baseUrl/users/me/avatar');
+    
+    try {
+      var request = http.MultipartRequest('POST', url);
+      
+      request.headers['auth-token'] = token;
+      
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          imageFile.path,
+          filename: imageFile.path.split('/').last,
+        ),
+      );
+      
+      final response = await request.send();
+      
+      final responseBody = await response.stream.bytesToString();
+      
+      return jsonDecode(responseBody);
+      
+    } catch (e) {
+      throw Exception('Ошибка при загрузке аватара: $e');
+    }
   }
   
 

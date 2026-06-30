@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,6 +22,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String _lastName = '';
   String? _avatarPath;
   String? _description;
+
 
   @override
   void initState() {
@@ -81,6 +85,128 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _deleteAvatar() async {
+    try{
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      setState(() {
+        _isLoading = true;
+      });
+
+      final api = ApiService();
+      final response = await api.deleteAvatar(token!);
+      
+
+      final isSuccess = response["success"];
+      if (isSuccess == true) {
+        final message = response["message"];
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("$message"),
+              duration: Duration(seconds: 2),
+              backgroundColor: Colors.greenAccent,
+            ),
+        );
+        _loadProfile();
+      } else {
+          final message = response["message"] ?? 'Неизвестная ошибка';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("$message"),
+              duration: Duration(seconds: 2),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+    }catch (e){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("$e"),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      FilePickerResult? result = await FilePicker.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final platformFile = result.files.first;
+      
+      String? filePath = platformFile.path;
+      
+      if (filePath == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('На веб-платформах требуется дополнительная обработка')),
+        );
+        return;
+      }
+
+      setState(() {
+        _isLoading = true;
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final api = ApiService();
+      final response = await api.changeAvatar(token, File(filePath));
+
+      final isSuccess = response["success"];
+      
+      if (isSuccess == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response["message"] ?? 'Аватар обновлен'),
+              backgroundColor: Colors.teal,
+            ),
+          );
+        }
+        await _loadProfile();
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response["message"] ?? 'Ошибка'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -132,7 +258,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 padding: const EdgeInsets.only(right: 8, left: 8),
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.image),
-                  onPressed: () {},
+                  onPressed: _pickAndUploadImage,
                   style: OutlinedButton.styleFrom(
                     elevation: 2,
                     padding: const EdgeInsets.symmetric(vertical: 20),
@@ -154,7 +280,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 padding: const EdgeInsets.only(left: 8, right: 8),
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.delete_outline),
-                  onPressed: () {},
+                  onPressed: _deleteAvatar,
                   style: OutlinedButton.styleFrom(
                     elevation: 2,
                     padding: const EdgeInsets.symmetric(vertical: 20),
