@@ -208,46 +208,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> _updateDescription(String description) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-
-      if (token == null || !mounted) return;
-
-      final api = ApiService();
-      final response = await api.updateDescription(token, description);
-
-      if (!mounted) return;
-
-      if (response["success"] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response["message"] ?? 'Описание обновлено'),
-            backgroundColor: Colors.greenAccent,
-          ),
-        );
-        await _loadProfile();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response["message"] ?? 'Неизвестная ошибка'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Ошибка: $e"),
-          duration: const Duration(seconds: 2),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
+  
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
