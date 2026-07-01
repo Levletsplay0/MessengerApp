@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screens/edit_description_page.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -132,7 +133,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _pickAndUploadImage() async {
     try {
-      FilePickerResult? result = await FilePicker.pickFiles(
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: false,
       );
@@ -204,6 +205,46 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _updateDescription(String description) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null || !mounted) return;
+
+      final api = ApiService();
+      final response = await api.updateDescription(token, description);
+
+      if (!mounted) return;
+
+      if (response["success"] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response["message"] ?? 'Описание обновлено'),
+            backgroundColor: Colors.greenAccent,
+          ),
+        );
+        await _loadProfile();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response["message"] ?? 'Неизвестная ошибка'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Ошибка: $e"),
+          duration: const Duration(seconds: 2),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -308,14 +349,15 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildInfoRow(Icons.person_outline, _username, 'Имя пользователя'),
-                const SizedBox(height: 16),
+                const Divider(),
                 _buildInfoRow(Icons.email_outlined, _email, 'Почта'),
-                const SizedBox(height: 16),
+                const Divider(),
                 _buildInfoRow(
                   Icons.description_outlined,
                   _description ?? 'Не указано',
                   'Описание',
-                ),
+                  onEdit: _navigateToEditDescription
+                ),  
               ],
             ),
           ),
@@ -355,7 +397,12 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String value, String label) {
+  Widget _buildInfoRow(
+    IconData icon, 
+    String value, 
+    String label, 
+    {VoidCallback? onEdit}
+  ) {
     return Row(
       children: [
         Icon(icon, color: Colors.blue, size: 24),
@@ -381,8 +428,29 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
         ),
-        OutlinedButton(onPressed: (){}, child: Text("Изменить"))
+        if (onEdit != null)
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: onEdit,
+            tooltip: 'Редактировать',
+          ),
       ],
     );
   }
+
+  void _navigateToEditDescription() async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => EditDescriptionPage(
+        currentDescription: _description ?? '',
+      ),
+    ),
+  );
+
+  if (result == true && mounted) {
+    await _loadProfile();
+  }
+}
+
 }

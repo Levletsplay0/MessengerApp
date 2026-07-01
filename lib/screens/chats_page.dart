@@ -61,10 +61,12 @@ class _ChatsPageState extends State<ChatsPage> {
 
       
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      if(mounted){
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 

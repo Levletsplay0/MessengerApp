@@ -154,6 +154,30 @@ class ApiService {
       throw Exception('Ошибка при загрузке аватара: $e');
     }
   }
+
+
+  Future<Map<String, dynamic>> updateDescription(String token, String description) async {
+    final Uri url = Uri.parse('$baseUrl/users/me/description');
+    
+    try{
+      final response = await http.patch(
+        url,
+        headers: {
+          'Content-Type': 'application/json', 
+          'auth-token': token,
+        },
+        body: jsonEncode({
+          "description": description,
+        }),
+        
+      );
+
+      return jsonDecode(response.body);
+    }
+    catch(e){
+      throw Exception('Ошибка: $e');
+    }
+  }
   
 
 

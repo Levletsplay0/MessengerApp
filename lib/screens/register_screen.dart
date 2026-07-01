@@ -102,152 +102,199 @@ class _RegisterScreenState extends State<RegisterScreen> {
       appBar: AppBar(
         title: const Text('Регистрация'),
       ),
-      body: Center(
-        child: Column(
-          children: [
-            const SizedBox(height: 25,),
-            Icon(Icons.person_add, size: 75,),
-            const SizedBox(height: 5,),
-            Text(
-              "Регистрация",
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold
-              ),
-            ),
-            SizedBox(height: 25,),
-            SizedBox(
-              width: 300,
-              child: TextField(
-                keyboardType: TextInputType.emailAddress,
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: "Почта",
-                  prefixIcon: Icon(Icons.email),
-                  fillColor: Colors.transparent,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              const SizedBox(height: 25),
+              Icon(Icons.person_add, size: 75),
+              const SizedBox(height: 5),
+              Text(
+                "Регистрация",
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold
                 ),
               ),
-            ),
-            SizedBox(height: 25,),
-            SizedBox(
-              width: 300,
-              child: TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(
-                  labelText: "Имя пользователя",
-                  prefixIcon: const Icon(Icons.person),
-                  fillColor: Colors.transparent,
-                ),
-                
-              ),
-            ),
-            SizedBox(height: 25,),
-            SizedBox(
-              width: 300,
-              child: TextField(
-                controller: _passwordController,
-                obscureText: !_isPasswordVisible,
-                decoration: InputDecoration(
-                  labelText: "Пароль",
-                  prefixIcon: const Icon(Icons.password),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordVisible 
-                          ? Icons.visibility_off 
-                          : Icons.visibility,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
-                    },
+              const SizedBox(height: 25),
+              
+              Card(
+                color: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    width: 1.5,
                   ),
-                  fillColor: Colors.transparent,
                 ),
-                
-              ),
-            ),
-            SizedBox(height: 25,),
-            SizedBox(
-              width: 300,
-              child: TextField(
-                controller: _confirmPasswordController,
-                obscureText: !_isPasswordVisible,
-                decoration: InputDecoration(
-                  labelText: "Повторите пароль",
-                  prefixIcon: const Icon(Icons.password),
-                  fillColor: Colors.transparent,
-                  
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.account_circle),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Учетные данные',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      TextField(
+                        keyboardType: TextInputType.emailAddress,
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: "Почта",
+                          prefixIcon: Icon(Icons.email),
+                          fillColor: Colors.transparent,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      TextField(
+                        controller: _usernameController,
+                        decoration: InputDecoration(
+                          labelText: "Имя пользователя",
+                          prefixIcon: const Icon(Icons.person),
+                          fillColor: Colors.transparent,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: !_isPasswordVisible,
+                        decoration: InputDecoration(
+                          labelText: "Пароль",
+                          prefixIcon: const Icon(Icons.password),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isPasswordVisible 
+                                  ? Icons.visibility_off 
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isPasswordVisible = !_isPasswordVisible;
+                              });
+                            },
+                          ),
+                          fillColor: Colors.transparent,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      TextField(
+                        controller: _confirmPasswordController,
+                        obscureText: !_isPasswordVisible,
+                        decoration: InputDecoration(
+                          labelText: "Повторите пароль",
+                          prefixIcon: const Icon(Icons.password),
+                          fillColor: Colors.transparent,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                
               ),
-            ),
-            SizedBox(height: 25,),
-            SizedBox(
-              width: 300,
-              child: TextField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: "Имя",
-                  prefixIcon: const Icon(Icons.text_format_outlined),
-                  fillColor: Colors.transparent,
-                  
+              
+              Card(
+                color: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    width: 1.5,
+                  ),
                 ),
-                
-              ),
-            ),
-            SizedBox(height: 25,),
-            SizedBox(
-              width: 300,
-              child: TextField(
-                controller: _lastNameController,
-                decoration: InputDecoration(
-                  labelText: "Фамилия",
-                  prefixIcon: const Icon(Icons.text_format_outlined),
-                  fillColor: Colors.transparent,
-                  
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.shield),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Личные данные',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          labelText: "Имя",
+                          fillColor: Colors.transparent,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      TextField(
+                        controller: _lastNameController,
+                        decoration: InputDecoration(
+                          labelText: "Фамилия",
+                          fillColor: Colors.transparent,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                
               ),
-            ),
-            SizedBox(height: 25,),
-            SizedBox(
-              width: 300,
-              child: 
-                OutlinedButton(
+              
+              const SizedBox(height: 20),
+              
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
                   onPressed: _register,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
                   child: const Text('Зарегистрироваться'),
                 ),
-            ),
-            SizedBox(height: 25,),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "Зарегистрированы? ",
-                  style: TextStyle(color: Colors.grey),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.mediumImpact();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
-                    );
-                  },
-                  child: const Text(
-                    "Войти",
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
+              ),
+              
+              const SizedBox(height: 15),
+              
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Зарегистрированы? ",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      );
+                    },
+                    child: const Text(
+                      "Войти",
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            
-          ],
-        )
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
