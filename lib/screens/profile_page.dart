@@ -439,18 +439,18 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _navigateToEditDescription() async {
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => EditDescriptionPage(
-        currentDescription: _description ?? '',
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditDescriptionPage(
+          currentDescription: _description ?? '',
+        ),
       ),
-    ),
-  );
+    );
 
-  if (result == true && mounted) {
-    await _loadProfile();
+    if (result == true && mounted) {
+      await _loadProfile();
+    }
   }
-}
 
 }
