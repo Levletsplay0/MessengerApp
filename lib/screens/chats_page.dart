@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_application_1/services/api_service.dart';
+import 'package:flutter_application_1/screens/chat_screen.dart';
 
 class ChatsPage extends StatefulWidget {
   const ChatsPage({super.key});
@@ -11,7 +12,7 @@ class ChatsPage extends StatefulWidget {
 
 class _ChatsPageState extends State<ChatsPage> {
   bool _isLoading = true;
-  List<dynamic> _chats = [];
+  List _chats = [];
   String? _error;
 
   @override
@@ -20,7 +21,7 @@ class _ChatsPageState extends State<ChatsPage> {
     _loadChats();
   }
 
-  Future<void> _loadChats() async {
+  Future _loadChats() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
@@ -38,15 +39,15 @@ class _ChatsPageState extends State<ChatsPage> {
       final isSuccess = response["success"];
       if (isSuccess == true) {
         final data = response["data"];
-        
+
         if (data == null) {
           setState(() {
-            _error = 'Данные профиля пусты';
+            _error = 'Данные пусты';
             _isLoading = false;
           });
           return;
         }
-        
+
         setState(() {
           _chats = data;
           _isLoading = false;
@@ -58,10 +59,8 @@ class _ChatsPageState extends State<ChatsPage> {
           _isLoading = false;
         });
       }
-
-      
     } catch (e) {
-      if(mounted){
+      if (mounted) {
         setState(() {
           _error = e.toString();
           _isLoading = false;
@@ -72,46 +71,90 @@ class _ChatsPageState extends State<ChatsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : _error != null
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Ошибка: $_error'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _isLoading = true;
-                          _error = null;
-                        });
-                        _loadChats();
+    return RefreshIndicator(
+      onRefresh: () async {
+        setState(() {
+          _isLoading = true;
+          _error = null;
+        });
+        await _loadChats();
+      },
+      child: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Ошибка: $_error'),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _isLoading = true;
+                            _error = null;
+                          });
+                          _loadChats();
+                        },
+                        child: const Text('Повторить'),
+                      ),
+                    ],
+                  ),
+                )
+              : _chats.isEmpty
+                  ? ListView(
+                      children: const [
+                        SizedBox(height: 200),
+                        Center(
+                          child: Column(
+                            children: [
+                              Icon(Icons.chat_bubble_outline, size: 80, color: Colors.grey),
+                              SizedBox(height: 16),
+                              Text('Нет чатов', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                              SizedBox(height: 8),
+                              Text('Потяните вниз для обновления', style: TextStyle(color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )
+                  : ListView.builder(
+                      itemCount: _chats.length,
+                      itemBuilder: (context, index) {
+                        final chat = _chats[index];
+                        final name = chat['name'] ?? 'Без названия';
+                        final description = chat['description'] ?? 'Без описания';
+                        final avatarPath = chat['avatar_path'];
+                        final groupId = chat['id'];
+
+                        return ListTile(
+                          leading: _buildAvatar(name, avatarPath),
+                          title: Text(
+                            name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            description,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChatScreen(
+                                  groupId: groupId,
+                                  groupName: name,
+                                  groupAvatar: avatarPath,
+                                ),
+                              ),
+                            );
+                          },
+                        );
                       },
-                      child: const Text('Повторить'),
                     ),
-                  ],
-                ),
-              )
-            : ListView.builder(
-                itemCount: _chats.length,
-                itemBuilder: (context, index) {
-                  final chat = _chats[index];
-                  final name = chat['name'] ?? 'Без названия';
-                  final description = chat['description'] ?? 'Без описания';
-                  final avatarPath = chat['avatar_path'];
-                  return ListTile(
-                    leading: _buildAvatar(name, avatarPath),
-                    title: Text(
-                      name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(description),
-                    onTap: () {},
-                  );
-                },
-              );
+    );
   }
 
   Widget _buildAvatar(String name, String? avatarPath) {
@@ -120,9 +163,7 @@ class _ChatsPageState extends State<ChatsPage> {
     if (avatarPath != null && avatarPath.isNotEmpty) {
       return CircleAvatar(
         radius: size / 2,
-        backgroundImage: NetworkImage(
-          'http://45.132.255.102:8000/$avatarPath',
-        ),
+        backgroundImage: NetworkImage('http://45.132.255.102:8000/$avatarPath'),
       );
     }
 

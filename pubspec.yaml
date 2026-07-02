@@ -37,6 +37,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.5.5
   file_picker: ^10.3.8
+  web_socket_channel: ^3.0.3
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
