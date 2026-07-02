@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -230,6 +229,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // Восстановленное меню действий
   void _showMessageOptions(dynamic message) {
     final isOwn = message['author_id'] == _currentUserId;
     final hasFile = message['file'] != null && message['file'] is Map;
@@ -308,6 +308,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  // Восстановленный диалог редактирования
   void _showEditDialog(dynamic message) {
     final controller = TextEditingController(text: message['content'] ?? '');
 
@@ -375,6 +376,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  // Восстановленное подтверждение удаления
   Future<void> _deleteMessage(int messageId) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -608,6 +610,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return Align(
       alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
       child: GestureDetector(
+        // ВОССТАНОВЛЕНО: Вызов меню при долгом нажатии
         onLongPress: () => _showMessageOptions(message),
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 2),
@@ -642,7 +645,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
               if (hasFile)
-                _buildFileAttachment(filePath!, fileName!),
+                _buildFileAttachment(filePath, fileName!),
               if (content.isNotEmpty)
                 SelectableText(
                   content,
@@ -896,7 +899,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // === ОБНОВЛЕННАЯ ПАНЕЛЬ ВВОДА ===
   Widget _buildInputArea() {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
@@ -913,14 +915,12 @@ class _ChatScreenState extends State<ChatScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // Кнопка прикрепления файла
-
                 Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: Colors.white, // цвет обводки
-                      width: 2.0, // толщина обводки
+                      color: Colors.white,
+                      width: 2.0,
                     ),
                   ),
                   child: Material(
@@ -944,7 +944,6 @@ class _ChatScreenState extends State<ChatScreen> {
                 
                 const SizedBox(width: 6),
 
-                // Поле ввода "Капсула"
                 Expanded(
                   child: TextField(
                     controller: _messageController,
@@ -953,7 +952,6 @@ class _ChatScreenState extends State<ChatScreen> {
                       hintText: 'Сообщение...',
                       hintStyle: TextStyle(color: Colors.grey[500], fontSize: 15),
                       isDense: true,
-
                     ),
                     onSubmitted: (_) => _sendMessage(),
                   ),
@@ -975,7 +973,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: IconButton(
                       icon: _isSending
                           ? const SizedBox(
-                              width: 200,
+                              width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
