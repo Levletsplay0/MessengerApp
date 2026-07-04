@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_1/screens/group_info_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
@@ -434,29 +435,32 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
         scrolledUnderElevation: 1,
-        title: Row(
-          children: [
-            _buildGroupAvatar(widget.groupName, avatarPath),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.groupName,
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (_groupDescription != null && _groupDescription!.isNotEmpty)
+        title: GestureDetector(
+          onTap: (){Navigator.push(context, MaterialPageRoute(builder: (context) => GroupInfoPage()));},
+          child: Row(
+            children: [
+              _buildGroupAvatar(widget.groupName, avatarPath),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      _groupDescription!,
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      widget.groupName,
+                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
                     ),
-                ],
+                    if (_groupDescription != null && _groupDescription!.isNotEmpty)
+                      Text(
+                        _groupDescription!,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           Padding(
@@ -470,7 +474,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   shape: BoxShape.circle,
                   color: _wsService.isConnected ? Colors.greenAccent : Colors.redAccent,
                   boxShadow: _wsService.isConnected
-                      ? [BoxShadow(color: Colors.greenAccent.withOpacity(0.6), blurRadius: 6)]
+                      ? [BoxShadow(color: Colors.greenAccent.withValues(alpha: 0.6), blurRadius: 6)]
                       : null,
                 ),
               ),
