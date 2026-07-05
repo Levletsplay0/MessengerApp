@@ -111,8 +111,6 @@ class _ChatsPageState extends State<ChatsPage> {
                               Icon(Icons.chat_bubble_outline, size: 80, color: Colors.grey),
                               SizedBox(height: 16),
                               Text('Нет чатов', style: TextStyle(fontSize: 18, color: Colors.grey)),
-                              SizedBox(height: 8),
-                              Text('Потяните вниз для обновления', style: TextStyle(color: Colors.grey)),
                             ],
                           ),
                         ),

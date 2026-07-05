@@ -173,4 +173,28 @@ class ApiService {
       throw Exception('Ошибка: $e');
     }
   }
+
+  Future<Map<String, dynamic>> getGroupMembers(String token, int groupId) async {
+    final Uri url = Uri.parse('$baseUrl/groups/$groupId/members');
+    try {
+      final response = await http.get(url, headers: {'Content-Type': 'application/json', 'auth-token': token});
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> kickUserFromGroup(String token, int groupId, List<int> userIds) async {
+    final Uri url = Uri.parse('$baseUrl/groups/$groupId/kick');
+    try {
+      final response = await http.post(
+        url, 
+        headers: {'Content-Type': 'application/json', 'auth-token': token}, 
+        body: jsonEncode({"user_ids": userIds}),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
 }

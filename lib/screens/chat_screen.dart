@@ -436,7 +436,7 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         scrolledUnderElevation: 1,
         title: GestureDetector(
-          onTap: (){Navigator.push(context, MaterialPageRoute(builder: (context) => GroupInfoPage()));},
+          onTap: (){Navigator.push(context, MaterialPageRoute(builder: (context) => GroupInfoPage(groupId: widget.groupId)));},
           child: Row(
             children: [
               _buildGroupAvatar(widget.groupName, avatarPath),
