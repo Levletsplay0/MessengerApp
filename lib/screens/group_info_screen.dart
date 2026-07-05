@@ -10,33 +10,16 @@ class GroupInfoPage extends StatefulWidget {
 }
 
 class _GroupInfoPage extends State<GroupInfoPage> {
-  bool _isPasswordVisible = false;
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
   
   @override
   void dispose() {
-    _usernameController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
-    String username = _usernameController.text.trim();
-    String password = _passwordController.text;
-
-    if (username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Заполните все поля'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 1),
-        ),
-      );
-    }
     try {
       final api = ApiService();
-      final response = await api.login(username, password);
+      final response = await api.login("username", "password");
       bool isSuccess = response["success"];
       String message = response["message"];
       
@@ -82,7 +65,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
         child: Column(
           children: [
             const SizedBox(height: 25,),
-            CircleAvatar(radius: 40,),
+            CircleAvatar(radius: 50,),
             const SizedBox(height: 5,),
             Text(
               "Название",
@@ -94,7 +77,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
             Text(
               "Кол-во участников",
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 14,
                 color: Colors.grey
               ),
             ),
@@ -109,13 +92,15 @@ class _GroupInfoPage extends State<GroupInfoPage> {
                     Center(
                       child: SizedBox(
                         width: double.infinity,
-                        child: OutlinedButton(onPressed: (){}, child: Text("Добавить участников")),
+                        child: OutlinedButton(
+                          onPressed: (){}, 
+                          style: OutlinedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))), 
+                          child: Text("Добавить участников"),
+                        ),
                       )
                     ),
                     const Divider(),
-                    _buildInfoRow(Icons.label, "Название группы", 'Название', onEdit: (){}),
-                    const Divider(),
-                    _buildInfoRow(Icons.description_outlined, "Описание группы", 'Описание', onEdit: (){}),  
+                    _buildInfoRow(Icons.person, "Имя участника", 'Joined at', onEdit: (){}),
                   ],
                 ),
               ),
@@ -135,7 +120,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
   ) {
     return Row(
       children: [
-        Icon(icon, color: Colors.blue, size: 24),
+        CircleAvatar(radius: 16,),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
@@ -159,10 +144,10 @@ class _GroupInfoPage extends State<GroupInfoPage> {
           ),
         ),
         if (onEdit != null)
-          IconButton(
-            icon: const Icon(Icons.edit),
+          OutlinedButton.icon(
             onPressed: onEdit,
-            tooltip: 'Редактировать',
+            icon: Icon(Icons.arrow_upward),
+            label: Text("Кик"),
           ),
       ],
     );
