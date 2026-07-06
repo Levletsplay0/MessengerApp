@@ -197,4 +197,31 @@ class ApiService {
       throw Exception('Ошибка: $e');
     }
   }
+
+  Future<Map<String, dynamic>> searchUsers(String token, String username, {int limit = 20, int offset = 0}) async {
+    final Uri url = Uri.parse('$baseUrl/users/search?username=$username&limit=$limit&offset=$offset');
+    try {
+      final response = await http.get(
+        url, 
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> addGroupMembers(String token, int groupId, List<int> userIds) async {
+    final Uri url = Uri.parse('$baseUrl/groups/$groupId/members');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+        body: jsonEncode({"user_ids": userIds}),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
 }

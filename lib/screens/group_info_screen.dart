@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screens/add_members_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -299,7 +300,21 @@ void _kickMember(int memberId, String memberName) {
                             child: SizedBox(
                               width: double.infinity,
                               child: OutlinedButton(
-                                onPressed: () {},
+                                onPressed: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AddMembersScreen(
+                                        groupId: widget.groupId,
+                                        groupName: _groupName,
+                                      ),
+                                    ),
+                                  );
+
+                                  if (result == true && mounted) {
+                                    _getMembers(widget.groupId);
+                                  }
+                                },
                                 style: OutlinedButton.styleFrom(
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
