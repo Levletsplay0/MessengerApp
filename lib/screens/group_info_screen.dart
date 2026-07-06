@@ -217,7 +217,6 @@ void _kickMember(int memberId, String memberName) {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  const SizedBox(height: 25),
                   CircleAvatar(
                     radius: 50,
                     backgroundImage: _avatarPath.isNotEmpty
@@ -250,11 +249,43 @@ void _kickMember(int memberId, String memberName) {
                     ),
                   ),
                   const SizedBox(height: 25),
-                  Text(
-                    "$_description",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
+                  Card(
+                    color: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: Colors.blue.withValues(alpha: 0.5),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SelectionArea(
+                            child: Text(
+                              _description,
+                              style: TextStyle(
+                                fontSize: 18,
+                              ),
+                              textAlign: TextAlign.justify,
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Text(
+                              "Описание",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 25),
@@ -312,6 +343,7 @@ void _kickMember(int memberId, String memberName) {
                                           onEdit: id != null
                                               ? () => _kickMember(id, username)
                                               : null,
+                                          roleLabel: role
                                         ),
                                         if (index < _members.length - 1)
                                           const Divider(),
@@ -336,6 +368,8 @@ void _kickMember(int memberId, String memberName) {
     String? avatarPath,
     VoidCallback? onEdit,
     VoidCallback? onTap,
+    String? roleLabel,
+    Color? roleColor,
   }) {
     return Row(
       children: [
@@ -355,12 +389,24 @@ void _kickMember(int memberId, String memberName) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        value,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              value,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          if (roleLabel != null && roleLabel.isNotEmpty)
+                            _buildRoleBadge(
+                              label: roleLabel,
+                              color: roleColor ?? Colors.blue,
+                            ),
+                        ],
                       ),
                       Text(
                         label,
@@ -387,6 +433,30 @@ void _kickMember(int memberId, String memberName) {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildRoleBadge({
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(left: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12), 
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.5)), 
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
+          height: 1.2,
+        ),
+      ),
     );
   }
 
@@ -463,7 +533,7 @@ void _kickMember(int memberId, String memberName) {
       String hour = dateTime.hour.toString().padLeft(2, '0');
       String minute = dateTime.minute.toString().padLeft(2, '0');
 
-      return '$day $month $year г., $hour:$minute';
+      return '$day $month $year г. в $hour:$minute';
     } catch (e) {
       return "Неизвестно";
     }
