@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/add_members_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
@@ -20,126 +23,290 @@ class _GroupInfoPage extends State<GroupInfoPage> {
   String? _createdAt = "?";
   String _description = "Неизвестно";
   String _avatarPath = "";
-  String _baseURL = "http://45.132.255.102:8000/";
   String _creatorId = "Неизвестно";
+
+  final String _baseURL = "http://45.132.255.102:8000/";
+  final ApiService _api = ApiService();
+
 
   @override
   void initState() {
     super.initState();
-    _getMembers(widget.groupId);
-    _getGroup(widget.groupId);
+    _loadInitialData();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  Future<void> _loadInitialData() async {
+    _token = await _getToken();
+    if (_token == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
+    await Future.wait([
+      _getMembers(widget.groupId),
+      _getGroup(widget.groupId),
+    ]);
   }
+
+
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showSuccess(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _setLoading(bool value) {
+    if (!mounted) return;
+    setState(() => _isLoading = value);
+  }
+
 
   Future<void> _getMembers(int groupId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      _token = prefs.getString('auth_token');
+      final response = await _api.getGroupMembers(_token!, groupId);
+      final bool isSuccess = response["success"] == true;
+      final String message = response["message"] ?? "Ошибка";
 
-      if (_token == null) {
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      final api = ApiService();
-      final response = await api.getGroupMembers(_token!, groupId);
-      bool isSuccess = response["success"];
-      String message = response["message"] ?? "Ошибка";
-
-      if (isSuccess == true) {
+      if (isSuccess) {
         final data = response["data"];
-
         setState(() {
-          _isLoading = false;
           _members = data is List ? data : [];
           _membersCount = _members.length;
+          _isLoading = false;
         });
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ошибка: $message'), backgroundColor: Colors.red),
-          );
-        }
+        _showError('Ошибка: $message');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
-        );
-      }
+      _showError('Ошибка: $e');
     }
   }
 
   Future<void> _getGroup(int groupId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      _token = prefs.getString('auth_token');
+      final response = await _api.getGroupDetails(_token!, groupId);
+      final bool isSuccess = response["success"] == true;
+      final String message = response["message"] ?? "Ошибка";
 
-      if (_token == null) {
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final api = ApiService();
-      final response = await api.getGroupDetails(_token!, groupId);
-      bool isSuccess = response["success"];
-      String message = response["message"] ?? "Ошибка";
-
-      if (isSuccess == true) {
-        setState(() {
-          _isLoading = false;
-        });
-
+      if (isSuccess) {
         final data = response["data"];
-        _groupName = data["name"] ?? "Неизвестно";
-        _description = data["description"] ?? "Неизвестно";
-        _avatarPath = data["avatar_path"] ?? "";
-        _creatorId = data["creator_id"]?.toString() ?? "Неизвестно";
-        _createdAt = data["created_at"];
+        setState(() {
+          _isLoading = false;
+          _groupName = data["name"] ?? "Неизвестно";
+          _description = data["description"] ?? "Неизвестно";
+          _avatarPath = data["avatar_path"] ?? "";
+          _creatorId = data["creator_id"]?.toString() ?? "Неизвестно";
+          _createdAt = data["created_at"];
+        });
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Ошибка: $message'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 1),
-            ),
-          );
-        }
+        _showError('Ошибка: $message');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка: $e'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 1),
-          ),
-        );
-      }
+      _showError('Ошибка: $e');
     }
   }
 
-void _kickMember(int memberId, String memberName) {
-    showDialog(
+  Future<void> _kickMemberApi(int memberId) async {
+    try {
+      final response = await _api.kickUserFromGroup(_token!, widget.groupId, [memberId]);
+      final bool isSuccess = response["success"] == true;
+      final String message = response["message"] ?? "Ошибка";
+
+      if (isSuccess) {
+        setState(() {
+          _members.removeWhere((m) => (m["id"] ?? m["user_id"]) == memberId);
+          _membersCount = _members.length;
+        });
+        _showSuccess(message);
+      } else {
+        _showError('Ошибка: $message');
+      }
+    } catch (e) {
+      _showError('Ошибка: $e');
+    }
+  }
+
+  Future<bool> _updateGroupNameApi(String newName) async {
+    try {
+      final response = await _api.updateGroupName(_token!, widget.groupId, newName);
+      final bool isSuccess = response["success"] == true;
+      final String message = response["message"] ?? "Ошибка";
+
+      if (isSuccess) {
+        setState(() {
+          _groupName = newName;
+          _isLoading = false;
+        });
+        _showSuccess(message);
+        return true;
+      } else {
+        _showError('Ошибка: $message');
+        return false;
+      }
+    } catch (e) {
+      _showError('Ошибка: $e');
+      return false;
+    }
+  }
+
+  Future<bool> _updateGroupDescriptionApi(String newDescription) async {
+    try {
+      final response = await _api.updateGroupDescription(_token!, widget.groupId, newDescription);
+      final bool isSuccess = response["success"] == true;
+      final String message = response["message"] ?? "Ошибка";
+
+      if (isSuccess) {
+        setState(() {
+          _description = newDescription;
+          _isLoading = false;
+        });
+        _showSuccess(message);
+        return true;
+      } else {
+        _showError('Ошибка: $message');
+        return false;
+      }
+    } catch (e) {
+      _showError('Ошибка: $e');
+      return false;
+    }
+  }
+
+  Future<void> _uploadAvatarApi(String filePath) async {
+    try {
+      _setLoading(true);
+      final response = await _api.changeGroupAvatar(_token!, widget.groupId, File(filePath));
+      final bool isSuccess = response["success"] == true;
+      final String message = response["message"] ?? "Ошибка";
+
+      if (isSuccess) {
+        setState(() {
+          _avatarPath = response["data"]?["avatar_path"] ?? "";
+          _isLoading = false;
+        });
+        _showSuccess(message);
+      } else {
+        _setLoading(false);
+        _showError(message);
+      }
+    } catch (e) {
+      _setLoading(false);
+      _showError('Ошибка: $e');
+    }
+  }
+
+  Future<void> _deleteAvatarApi() async {
+    try {
+      _setLoading(true);
+      final response = await _api.deleteGroupAvatar(_token!, widget.groupId);
+      final bool isSuccess = response["success"] == true;
+      final String message = response["message"] ?? "Ошибка";
+
+      if (isSuccess) {
+        setState(() {
+          _avatarPath = "";
+          _isLoading = false;
+        });
+        _showSuccess(message);
+      } else {
+        _setLoading(false);
+        _showError(message);
+      }
+    } catch (e) {
+      _setLoading(false);
+      _showError('Ошибка: $e');
+    }
+  }
+
+
+  Future<bool?> _showConfirmDialog({
+    required String title,
+    required String content,
+    String confirmText = 'Подтвердить',
+    Color confirmColor = Colors.redAccent,
+    IconData titleIcon = Icons.warning_rounded,
+  }) {
+    return showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.warning_rounded, color: Colors.orange),
-            SizedBox(width: 8),
-            Text('Исключить?'),
+            Icon(titleIcon, color: confirmColor),
+            const SizedBox(width: 8),
+            Text(title),
           ],
         ),
-        content: Text(
-            'Вы уверены, что хотите исключить "$memberName" из группы?\n\nЭто действие нельзя будет отменить.'),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: confirmColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(confirmText),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<String?> _showEditDialog({
+    required String title,
+    required String initialValue,
+    required IconData titleIcon,
+    int maxLength = 50,
+    int maxLines = 1,
+    String hintText = 'Введите значение...',
+    String emptyErrorText = 'Значение не может быть пустым',
+  }) {
+    final controller = TextEditingController(text: initialValue);
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Row(
+          children: [
+            Icon(titleIcon, color: Colors.blue),
+            const SizedBox(width: 8),
+            Text(title),
+          ],
+        ),
+        content: TextField(
+          controller: controller,
+          maxLength: maxLength,
+          maxLines: maxLines,
+          decoration: InputDecoration(
+            hintText: hintText,
+            border: const OutlineInputBorder(),
+            alignLabelWithHint: maxLines > 1,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -147,234 +314,383 @@ void _kickMember(int memberId, String memberName) {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
+              backgroundColor: Colors.blue,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              
-              try {
-                final api = ApiService();
-                final response = await api.kickUserFromGroup(_token!, widget.groupId, [memberId]);
-                bool isSuccess = response["success"];
-                final message = response["message"];
-
-                if (mounted) {
-                  if (isSuccess) {
-                    setState(() {
-                      _members.removeWhere((m) => m["id"] == memberId);
-                      _membersCount = _members.length;
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(message),
-                        backgroundColor: Colors.green,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Ошибка: $message'), backgroundColor: Colors.red),
-                    );
-                  }
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
-                  );
-                }
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isEmpty) {
+                _showError(emptyErrorText);
+                return;
               }
+              Navigator.pop(dialogContext, text);
             },
-            child: const Text('Исключить'),
+            child: const Text('Сохранить'),
           ),
         ],
       ),
     );
   }
 
+
+  Future<void> _kickMember(int memberId, String memberName) async {
+    final confirmed = await _showConfirmDialog(
+      title: 'Исключить?',
+      content: 'Вы уверены, что хотите исключить "$memberName" из группы?\n\nЭто действие нельзя будет отменить.',
+      confirmText: 'Исключить',
+    );
+    if (confirmed == true) {
+      await _kickMemberApi(memberId);
+    }
+  }
+
+  Future<void> _editGroupName() async {
+    final newName = await _showEditDialog(
+      title: 'Изменить название',
+      initialValue: _groupName,
+      titleIcon: Icons.edit,
+      maxLength: 20,
+      hintText: 'Введите новое название...',
+      emptyErrorText: 'Название не может быть пустым',
+    );
+    if (newName == null) return;
+
+    _setLoading(true);
+    final success = await _updateGroupNameApi(newName);
+    if (!success && mounted) _setLoading(false);
+  }
+
+  Future<void> _editGroupDescription() async {
+    final initial = _description == "Неизвестно" ? "" : _description;
+    final newDescription = await _showEditDialog(
+      title: 'Изменить описание',
+      initialValue: initial,
+      titleIcon: Icons.description,
+      maxLength: 100,
+      maxLines: 5,
+      hintText: 'Введите новое описание...',
+      emptyErrorText: 'Описание не может быть пустым',
+    );
+    if (newDescription == null) return;
+
+    _setLoading(true);
+    final success = await _updateGroupDescriptionApi(newDescription);
+    if (!success && mounted) _setLoading(false);
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+      if (result == null || result.files.isEmpty) return;
+
+      final filePath = result.files.first.path;
+      if (filePath == null) {
+        _showError('На веб-платформах требуется дополнительная обработка');
+        return;
+      }
+      await _uploadAvatarApi(filePath);
+    } catch (e) {
+      _showError('Ошибка: $e');
+    }
+  }
+
+  Future<void> _confirmDeleteAvatar() async {
+    final confirmed = await _showConfirmDialog(
+      title: 'Удалить аватарку?',
+      content: 'Вы уверены, что хотите удалить аватарку группы?\n\nЭто действие нельзя будет отменить.',
+      confirmText: 'Удалить',
+    );
+    if (confirmed == true) {
+      await _deleteAvatarApi();
+    }
+  }
+
+  void _changeAvatar() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Управление аватаркой',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.image, color: Colors.blue),
+              title: const Text('Загрузить фото'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndUploadAvatar();
+              },
+            ),
+            if (_avatarPath.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text('Удалить фото'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _confirmDeleteAvatar();
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openAddMembers() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddMembersScreen(
+          groupId: widget.groupId,
+          groupName: _groupName,
+        ),
+      ),
+    );
+    if (result == true && mounted) {
+      await _getMembers(widget.groupId);
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('О группе'),
-        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.edit))],
-      ),
-      body: _isLoading
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text(
-                    'Загрузка информации о группе...',
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
-                  ),
-                ],
-              ),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: _avatarPath.isNotEmpty
-                        ? NetworkImage("$_baseURL$_avatarPath") as ImageProvider
-                        : null,
-                    child: _avatarPath.isEmpty
-                        ? const Icon(Icons.group, size: 50, color: Colors.grey)
-                        : null,
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    _groupName,
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    "Кол-во участников: $_membersCount",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  Text(
-                    "Группа создана ${_formatDate(_createdAt)}",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-                  Card(
-                    color: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                        color: Colors.blue.withValues(alpha: 0.5),
-                        width: 1.0,
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SelectionArea(
-                            child: Text(
-                              _description,
-                              style: TextStyle(
-                                fontSize: 18,
-                              ),
-                              textAlign: TextAlign.justify,
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          Align(
-                            alignment: Alignment.bottomLeft,
-                            child: Text(
-                              "Описание",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: OutlinedButton(
-                                onPressed: () async {
-                                  final result = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => AddMembersScreen(
-                                        groupId: widget.groupId,
-                                        groupName: _groupName,
-                                      ),
-                                    ),
-                                  );
-
-                                  if (result == true && mounted) {
-                                    _getMembers(widget.groupId);
-                                  }
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                child: const Text("Добавить участников"),
-                              ),
-                            ),
-                          ),
-                          const Divider(),
-                          _members.isEmpty
-                              ? const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 20),
-                                    child: Text(
-                                      "В группе пока нет участников",
-                                      style: TextStyle(color: Colors.grey, fontSize: 14),
-                                    ),
-                                  ),
-                                )
-                              : Column(
-                                  children: _members.asMap().entries.map((entry) {
-                                    final index = entry.key;
-                                    final member = entry.value;
-                                    final id = member["id"] ?? member["user_id"];
-                                    final username = member["username"] ?? member["name"] ?? "Без имени";
-                                    final avatarPath = member["avatar_path"] ?? "";
-                                    final role = member["role"] ?? "member";
-                                    final joinedAt = _formatDate(member["joined_at"]);
-
-                                    return Column(
-                                      children: [
-                                        _buildInfoRow(
-                                          Icons.person,
-                                          username,
-                                          'Присоединился: $joinedAt',
-                                          avatarPath: avatarPath,
-                                          onTap: () {
-                                            print("Открытие профиля");
-                                          },
-                                          onEdit: id != null
-                                              ? () => _kickMember(id, username)
-                                              : null,
-                                          roleLabel: role
-                                        ),
-                                        if (index < _members.length - 1)
-                                          const Divider(),
-                                      ],
-                                    );
-                                  }).toList(),
-                                ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      appBar: AppBar(title: const Text('О группе')),
+      body: _isLoading ? _buildLoadingView() : _buildContentView(),
     );
   }
+
+  Widget _buildLoadingView() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text(
+            'Загрузка информации о группе...',
+            style: TextStyle(color: Colors.grey, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContentView() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          _buildAvatarSection(),
+          const SizedBox(height: 16),
+          _buildAvatarButtons(),
+          const SizedBox(height: 10),
+          _buildNameSection(),
+          _buildMetaSection(),
+          const SizedBox(height: 25),
+          _buildDescriptionSection(),
+          const SizedBox(height: 25),
+          _buildMembersSection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatarSection() {
+    return CircleAvatar(
+      radius: 50,
+      backgroundImage: _avatarPath.isNotEmpty
+          ? NetworkImage("$_baseURL$_avatarPath") as ImageProvider
+          : null,
+      child: _avatarPath.isEmpty
+          ? const Icon(Icons.group, size: 50, color: Colors.grey)
+          : null,
+    );
+  }
+
+  Widget _buildAvatarButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          height: 50,
+          child: OutlinedButton.icon(
+            onPressed: _changeAvatar,
+            icon: const Icon(Icons.camera_alt_rounded, size: 20),
+            label: const Text('Изменить'),
+          ),
+        ),
+        if (_avatarPath.isNotEmpty) ...[
+          const SizedBox(width: 12),
+          SizedBox(
+            height: 50,
+            child: OutlinedButton.icon(
+              onPressed: _confirmDeleteAvatar,
+              icon: const Icon(Icons.delete_rounded, size: 20),
+              label: const Text('Удалить'),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildNameSection() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(width: 60),
+        Flexible(
+          child: Text(
+            _groupName,
+            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(width: 12),
+        IconButton(icon: const Icon(Icons.edit), onPressed: _editGroupName),
+      ],
+    );
+  }
+
+  Widget _buildMetaSection() {
+    return Column(
+      children: [
+        Text(
+          "Кол-во участников: $_membersCount",
+          style: const TextStyle(fontSize: 14, color: Colors.grey),
+        ),
+        Text(
+          "Группа создана ${_formatDate(_createdAt)}",
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDescriptionSection() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3), width: 1.5),
+      ),
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.description_rounded),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Описание',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit_rounded),
+                onPressed: _editGroupDescription,
+              ),
+            ],
+          ),
+          const Divider(),
+          SelectionArea(
+            child: Text(
+              _description,
+              style: const TextStyle(fontSize: 15, height: 1.6),
+              textAlign: TextAlign.left,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMembersSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _openAddMembers,
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text("Добавить участников"),
+                ),
+              ),
+            ),
+            const Divider(),
+            if (_members.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Text(
+                    "В группе пока нет участников",
+                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
+                ),
+              )
+            else
+              ..._buildMembersList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildMembersList() {
+    final items = <Widget>[];
+    for (var i = 0; i < _members.length; i++) {
+      final member = _members[i];
+      final id = member["id"] ?? member["user_id"];
+      final username = member["username"] ?? member["name"] ?? "Без имени";
+      final avatarPath = member["avatar_path"] ?? "";
+      final role = member["role"] ?? "member";
+      final joinedAt = _formatDate(member["joined_at"]);
+
+      items.add(
+        _buildInfoRow(
+          Icons.person,
+          username,
+          'Присоединился: $joinedAt',
+          avatarPath: avatarPath,
+          onTap: () => print("Открытие профиля"),
+          onEdit: id != null ? () => _kickMember(id, username) : null,
+          roleLabel: role,
+        ),
+      );
+      if (i < _members.length - 1) items.add(const Divider());
+    }
+    return items;
+  }
+
 
   Widget _buildInfoRow(
     IconData icon,
@@ -394,11 +710,7 @@ void _kickMember(int memberId, String memberName) {
             behavior: HitTestBehavior.opaque,
             child: Row(
               children: [
-                _buildAvatarWithLoader(
-                  avatarPath: avatarPath,
-                  icon: icon,
-                  radius: 18,
-                ),
+                _buildAvatarWithLoader(avatarPath: avatarPath, icon: icon, radius: 18),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -410,26 +722,14 @@ void _kickMember(int memberId, String memberName) {
                             child: Text(
                               value,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                             ),
                           ),
                           if (roleLabel != null && roleLabel.isNotEmpty)
-                            _buildRoleBadge(
-                              label: roleLabel,
-                              color: roleColor ?? Colors.blue,
-                            ),
+                            _buildRoleBadge(label: roleLabel, color: roleColor ?? Colors.blue),
                         ],
                       ),
-                      Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
+                      Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
                     ],
                   ),
                 ),
@@ -437,31 +737,25 @@ void _kickMember(int memberId, String memberName) {
             ),
           ),
         ),
-        
         if (onEdit != null)
           OutlinedButton.icon(
             onPressed: onEdit,
             icon: const Icon(Icons.arrow_upward, size: 16),
             label: const Text("Кик"),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.redAccent,
-            ),
+            style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
           ),
       ],
     );
   }
 
-  Widget _buildRoleBadge({
-    required String label,
-    required Color color,
-  }) {
+  Widget _buildRoleBadge({required String label, required Color color}) {
     return Container(
       margin: const EdgeInsets.only(left: 8),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12), 
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.5)), 
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
         label,
@@ -497,9 +791,7 @@ void _kickMember(int memberId, String memberName) {
           height: radius * 2,
           fit: BoxFit.cover,
           loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) {
-              return child;
-            }
+            if (loadingProgress == null) return child;
             return Center(
               child: SizedBox(
                 width: radius,
@@ -523,30 +815,25 @@ void _kickMember(int memberId, String memberName) {
     );
   }
 
+
   String _formatDate(String? dateString) {
     if (dateString == null || dateString.isEmpty || dateString == "0") {
       return "Неизвестно";
     }
-
     try {
-      dateString = '${dateString}Z';
-
-      DateTime dateTime = DateTime.parse(dateString);
-
-      if (dateTime.isUtc) {
-        dateTime = dateTime.toLocal();
-      }
+      DateTime dateTime = DateTime.parse('${dateString}Z');
+      if (dateTime.isUtc) dateTime = dateTime.toLocal();
 
       const months = [
         'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
         'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
       ];
 
-      String day = dateTime.day.toString();
-      String month = months[dateTime.month - 1];
-      String year = dateTime.year.toString();
-      String hour = dateTime.hour.toString().padLeft(2, '0');
-      String minute = dateTime.minute.toString().padLeft(2, '0');
+      final day = dateTime.day.toString();
+      final month = months[dateTime.month - 1];
+      final year = dateTime.year.toString();
+      final hour = dateTime.hour.toString().padLeft(2, '0');
+      final minute = dateTime.minute.toString().padLeft(2, '0');
 
       return '$day $month $year г. в $hour:$minute';
     } catch (e) {

@@ -106,7 +106,8 @@ class _ChatScreenState extends State<ChatScreen> {
           });
           _isLoading = false;
         });
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+        
+        Future.delayed(const Duration(milliseconds: 150), () {
           _scrollToBottom();
         });
       } else {
@@ -140,8 +141,9 @@ class _ChatScreenState extends State<ChatScreen> {
             });
           }
         });
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _scrollToBottom();
+        
+        Future.delayed(const Duration(milliseconds: 100), () {
+          _smartScrollToBottom();
         });
       }
     } else if (type == 'edit_message' && data != null) {
@@ -160,11 +162,32 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+  }
+
+  void _smartScrollToBottom() {
+    if (_scrollController.hasClients) {
+      final isAtBottom = _scrollController.offset >= 
+          _scrollController.position.maxScrollExtent - 100;
+      
+      if (isAtBottom) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     }
   }
 
@@ -194,7 +217,6 @@ class _ChatScreenState extends State<ChatScreen> {
               });
             }
           });
-          _scrollToBottom();
         }
       } else {
         _wsService.sendTextMessage(content);
@@ -210,6 +232,10 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } finally {
       setState(() => _isSending = false);
+      
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _scrollToBottom();
+      });
     }
   }
 
@@ -230,7 +256,6 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // Восстановленное меню действий
   void _showMessageOptions(dynamic message) {
     final isOwn = message['author_id'] == _currentUserId;
     final hasFile = message['file'] != null && message['file'] is Map;
@@ -309,7 +334,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // Восстановленный диалог редактирования
   void _showEditDialog(dynamic message) {
     final controller = TextEditingController(text: message['content'] ?? '');
 
@@ -377,7 +401,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // Восстановленное подтверждение удаления
   Future<void> _deleteMessage(int messageId) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -613,71 +636,129 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Align(
       alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
-      child: GestureDetector(
-        // ВОССТАНОВЛЕНО: Вызов меню при долгом нажатии
-        onLongPress: () => _showMessageOptions(message),
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 2),
-          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-          decoration: BoxDecoration(
-            color: isOwn
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.18)
-                : Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[850]
-                    : Colors.grey[200],
-            borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(18),
-              topRight: const Radius.circular(18),
-              bottomLeft: Radius.circular(isOwn ? 18 : 4),
-              bottomRight: Radius.circular(isOwn ? 4 : 18),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (!isOwn) ...[
+            GestureDetector(
+              onTap: () {
+                print("нажатие на аватарку");
+              },
+              child: _buildUserAvatar(message),
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: isOwn ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-            children: [
-              if (!isOwn)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    authorName,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: GestureDetector(
+              onLongPress: () => _showMessageOptions(message),
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 2),
+                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                decoration: BoxDecoration(
+                  color: isOwn
+                      ? Theme.of(context).colorScheme.primary.withOpacity(0.18)
+                      : Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[850]
+                          : Colors.grey[200],
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(18),
+                    topRight: const Radius.circular(18),
+                    bottomLeft: Radius.circular(isOwn ? 18 : 4),
+                    bottomRight: Radius.circular(isOwn ? 4 : 18),
                   ),
                 ),
-              if (hasFile)
-                _buildFileAttachment(filePath, fileName!),
-              if (content.isNotEmpty)
-                SelectableText(
-                  content,
-                  style: const TextStyle(fontSize: 15, height: 1.35),
-                ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isEdited)
-                    const Text(
-                      'изменено ',
-                      style: TextStyle(fontSize: 10, color: Colors.grey, fontStyle: FontStyle.italic),
-                    ),
-                  Text(timeStr, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                  if (isOwn) ...[
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.done_all_rounded,
-                      size: 14,
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                child: Column(
+                  crossAxisAlignment: isOwn ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  children: [
+                    if (!isOwn)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: GestureDetector(
+                          onTap: () {
+                            print("нажатие на аватарку");
+                          },
+                          child: Text(
+                            authorName,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (hasFile)
+                      _buildFileAttachment(filePath, fileName!),
+                    if (content.isNotEmpty)
+                      SelectableText(
+                        content,
+                        style: const TextStyle(fontSize: 15, height: 1.35),
+                      ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isEdited)
+                          const Text(
+                            'изменено ',
+                            style: TextStyle(fontSize: 10, color: Colors.grey, fontStyle: FontStyle.italic),
+                          ),
+                        Text(timeStr, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                        if (isOwn) ...[
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.done_all_rounded,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
-                ],
+                ),
               ),
-            ],
+            ),
           ),
-        ),
+          if (isOwn) ...[
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () {
+                print("нажатие на аватарку");
+              },
+              child: _buildUserAvatar(message),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserAvatar(dynamic message) {
+    final avatarPath = message['author_avatar'] ?? message['author_avatar_path'];
+    final authorName = message['author_name'] ?? message['author_username'] ?? 'Пользователь';
+    
+    if (avatarPath != null && avatarPath.toString().isNotEmpty) {
+      final url = avatarPath.toString().startsWith('http') 
+          ? avatarPath.toString() 
+          : 'http://45.132.255.102:8000/$avatarPath';
+      return CircleAvatar(
+        radius: 16,
+        backgroundImage: NetworkImage(url),
+      );
+    }
+
+    final firstLetter = authorName.isNotEmpty ? authorName[0].toUpperCase() : '?';
+    final colors = [Colors.blue, Colors.green, Colors.purple, Colors.orange, Colors.teal, Colors.pink];
+    final color = colors[authorName.length % colors.length];
+
+    return CircleAvatar(
+      radius: 16,
+      backgroundColor: color,
+      child: Text(
+        firstLetter,
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
       ),
     );
   }
@@ -919,30 +1000,14 @@ class _ChatScreenState extends State<ChatScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 2.0,
-                    ),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(24),
-                      onTap: _pickFile,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Icon(
-                          _selectedFile != null ? Icons.file_copy : Icons.attach_file_rounded,
-                          color: _selectedFile != null 
-                              ? Theme.of(context).colorScheme.primary 
-                              : Colors.grey[500],
-                          size: 20,
-                        ),
-                      ),
-                    ),
+                _buildCircleButton(
+                  onTap: _pickFile,
+                  child: Icon(
+                    _selectedFile != null ? Icons.file_copy : Icons.attach_file_rounded,
+                    color: _selectedFile != null 
+                        ? Theme.of(context).colorScheme.primary 
+                        : Colors.grey[500],
+                    size: 20,
                   ),
                 ),
                 
@@ -963,35 +1028,44 @@ class _ChatScreenState extends State<ChatScreen> {
 
                 const SizedBox(width: 6),
 
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.transparent,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 2.0,
-                      ),
-                    ),
-                    child: IconButton(
-                      icon: _isSending
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.send_rounded, color: Colors.white, size: 20),
-                      onPressed: _isSending ? null : () => _sendMessage(),
-                    ),
-                  ),
-                )
+                _buildCircleButton(
+                  onTap: _isSending ? null : () => _sendMessage(),
+                  child: _isSending
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                ),
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircleButton({
+    required VoidCallback? onTap,
+    required Widget child,
+  }) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2.0),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: Center(child: child),
         ),
       ),
     );

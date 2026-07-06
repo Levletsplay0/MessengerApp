@@ -224,4 +224,62 @@ class ApiService {
       throw Exception('Ошибка: $e');
     }
   }
+
+  Future<Map<String, dynamic>> updateGroupDescription(String token, int groupId, String description) async {
+    final Uri url = Uri.parse('$baseUrl/groups/$groupId/description');
+    try {
+      final response = await http.patch(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+        body: jsonEncode({"description": description}),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateGroupName(String token, int groupId, String name) async {
+    final Uri url = Uri.parse('$baseUrl/groups/$groupId/name');
+    try {
+      final response = await http.patch(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+        body: jsonEncode({"name": name}),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> changeGroupAvatar(String token, int groupId, File imageFile) async {
+    final Uri url = Uri.parse('$baseUrl/groups/$groupId/avatar');
+    try {
+      var request = http.MultipartRequest('POST', url);
+      request.headers['auth-token'] = token;
+      request.files.add(
+        await http.MultipartFile.fromPath('file', imageFile.path, filename: imageFile.path.split('/').last),
+      );
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      return jsonDecode(responseBody);
+    } catch (e) {
+      throw Exception('Ошибка при загрузке аватара группы: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteGroupAvatar(String token, int groupId) async {
+    final Uri url = Uri.parse('$baseUrl/groups/$groupId/avatar');
+    try {
+      final response = await http.delete(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
+  
 }
