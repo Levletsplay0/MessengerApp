@@ -6,18 +6,21 @@ import 'package:flutter_application_1/screens/edit_description_page.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+class UsersProfileScreen extends StatefulWidget {
+  final int userId;
+  const UsersProfileScreen({
+    super.key,
+    required this.userId
+  });
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  State<UsersProfileScreen> createState() => _UsersProfileScreen();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _UsersProfileScreen extends State<UsersProfileScreen> {
   bool _isLoading = true;
   String? _error;
   
-  int? _userId;
   String _username = '';
   String _email = '';
   String _name = '';
@@ -46,7 +49,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
 
       final api = ApiService();
-      final response = await api.getMe(token);
+      final response = await api.getUserDetails(token, widget.userId);
 
       final isSuccess = response["success"];
       if (isSuccess == true) {
@@ -61,7 +64,6 @@ class _ProfilePageState extends State<ProfilePage> {
         }
         
         setState(() {
-          _userId = data["id"] ?? '';
           _username = data["username"] ?? '';
           _email = data["email"] ?? '';
           _name = data["name"] ?? '';
@@ -214,125 +216,88 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
 
     if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Ошибка: $_error'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _isLoading = true;
-                  _error = null;
-                });
-                _loadProfile();
-              },
-              child: const Text('Повторить'),
-            ),
-          ],
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Профиль'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Ошибка: $_error'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _isLoading = true;
+                    _error = null;
+                  });
+                  _loadProfile();
+                },
+                child: const Text('Повторить'),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    return ListView(
-      children: [
-        const SizedBox(height: 25),
-        Column(
-          children: [
-            _buildAvatar(),
-            const SizedBox(height: 15),
-            Text(
-              "$_name $_lastName",
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              "Id: $_userId",
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-          ],
-        ),
-        const SizedBox(height: 15),
-        Row(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 8, left: 8),
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.image),
-                  onPressed: _pickAndUploadImage,
-                  style: OutlinedButton.styleFrom(
-                    elevation: 2,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  label: const Text(
-                    "Изменить фото",
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Профиль'),
+      ),
+      body: ListView(
+        children: [
+          const SizedBox(height: 25),
+          Column(
+            children: [
+              _buildAvatar(),
+              const SizedBox(height: 15),
+              Text(
+                "$_name $_lastName",
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 8, right: 8),
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: _deleteAvatar,
-                  style: OutlinedButton.styleFrom(
-                    elevation: 2,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  label: const Text(
-                    "Удалить фото",
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+              Text(
+                "Id: ${widget.userId}",
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 15),
-        Card(
-          margin: const EdgeInsets.symmetric(horizontal: 8),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildInfoRow(Icons.person_outline, _username, 'Имя пользователя'),
-                const Divider(),
-                _buildInfoRow(Icons.email_outlined, _email, 'Почта'),
-                const Divider(),
-                _buildInfoRow(
-                  Icons.description_outlined,
-                  _description ?? 'Не указано',
-                  'Описание',
-                  onEdit: _navigateToEditDescription
-                ),  
-              ],
+            ],
+          ),
+          const SizedBox(height: 15),
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInfoRow(Icons.person_outline, _username, 'Имя пользователя'),
+                  const Divider(),
+                  _buildInfoRow(
+                    Icons.description_outlined,
+                    _description ?? 'Не указано',
+                    'Описание',
+                  ),  
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+          
+        ],
+      ),
+      
     );
   }
 
+  
   Widget _buildAvatar() {
     if (_avatarPath != null && _avatarPath!.isNotEmpty) {
       return Container(
@@ -368,7 +333,6 @@ class _ProfilePageState extends State<ProfilePage> {
     IconData icon, 
     String value, 
     String label, 
-    {VoidCallback? onEdit}
   ) {
     return Row(
       children: [
@@ -395,29 +359,10 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
         ),
-        if (onEdit != null)
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: onEdit,
-            tooltip: 'Редактировать',
-          ),
+        
       ],
     );
   }
 
-  void _navigateToEditDescription() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditDescriptionPage(
-          currentDescription: _description ?? '',
-        ),
-      ),
-    );
-
-    if (result == true && mounted) {
-      await _loadProfile();
-    }
-  }
-
+  
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/add_members_screen.dart';
+import 'package:flutter_application_1/screens/users_profile_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -681,7 +682,14 @@ class _GroupInfoPage extends State<GroupInfoPage> {
           username,
           'Присоединился: $joinedAt',
           avatarPath: avatarPath,
-          onTap: () => print("Открытие профиля"),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => UsersProfileScreen(userId: id),
+              ),
+            );
+          },
           onEdit: id != null ? () => _kickMember(id, username) : null,
           roleLabel: role,
         ),

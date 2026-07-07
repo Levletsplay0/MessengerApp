@@ -281,5 +281,18 @@ class ApiService {
       throw Exception('Ошибка: $e');
     }
   }
+
+  Future<Map<String, dynamic>> getUserDetails(String token, int userId) async {
+    final Uri url = Uri.parse('$baseUrl/users/$userId');
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
   
 }

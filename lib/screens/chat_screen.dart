@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_1/screens/group_info_screen.dart';
+import 'package:flutter_application_1/screens/users_profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
@@ -117,10 +118,13 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      if(mounted){
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+      
     }
   }
 
@@ -622,6 +626,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final timeStr = DateFormat('HH:mm').format(sentAt);
     final isEdited = message['edited_at'] != null;
     final authorName = message['author_name'] ?? message['author_username'] ?? 'Пользователь';
+    final authorId = message['author_id'];
 
     String? filePath;
     String? fileName;
@@ -643,7 +648,12 @@ class _ChatScreenState extends State<ChatScreen> {
           if (!isOwn) ...[
             GestureDetector(
               onTap: () {
-                print("нажатие на аватарку");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UsersProfileScreen(userId: authorId),
+                  ),
+                );
               },
               child: _buildUserAvatar(message),
             ),
@@ -677,7 +687,12 @@ class _ChatScreenState extends State<ChatScreen> {
                         padding: const EdgeInsets.only(bottom: 4),
                         child: GestureDetector(
                           onTap: () {
-                            print("нажатие на аватарку");
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UsersProfileScreen(userId: authorId),
+                              ),
+                            );
                           },
                           child: Text(
                             authorName,
@@ -725,7 +740,13 @@ class _ChatScreenState extends State<ChatScreen> {
             const SizedBox(width: 8),
             GestureDetector(
               onTap: () {
-                print("нажатие на аватарку");
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Это вы! 😊", style: TextStyle(fontSize: 16),),
+                    duration: Duration(seconds: 1),
+                    backgroundColor: Colors.blue,
+                  ),
+                );
               },
               child: _buildUserAvatar(message),
             ),
