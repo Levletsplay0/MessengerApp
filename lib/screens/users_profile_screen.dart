@@ -1,8 +1,4 @@
-import 'dart:io';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screens/edit_description_page.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,7 +18,6 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
   String? _error;
   
   String _username = '';
-  String _email = '';
   String _name = '';
   String _lastName = '';
   String? _avatarPath;
@@ -65,11 +60,10 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
         
         setState(() {
           _username = data["username"] ?? '';
-          _email = data["email"] ?? '';
           _name = data["name"] ?? '';
           _lastName = data["last_name"] ?? '';
-          _avatarPath = data["avatar_path"];
           _description = data["description"];
+          _avatarPath = data["avatar_path"];
           _isLoading = false;
         });
       } else {
@@ -89,129 +83,6 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
       });
     }
   }
-
-  Future<void> _deleteAvatar() async {
-    try{
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-      setState(() {
-        _isLoading = true;
-      });
-
-      final api = ApiService();
-      final response = await api.deleteAvatar(token!);
-      
-
-      final isSuccess = response["success"];
-      if (isSuccess == true) {
-        final message = response["message"];
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("$message"),
-              duration: Duration(seconds: 2),
-              backgroundColor: Colors.greenAccent,
-            ),
-        );
-        _loadProfile();
-      } else {
-          final message = response["message"] ?? 'Неизвестная ошибка';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("$message"),
-              duration: Duration(seconds: 2),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-    }catch (e){
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("$e"),
-          duration: Duration(seconds: 2),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-    
-  }
-
-  Future<void> _pickAndUploadImage() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
-      );
-
-      if (result == null || result.files.isEmpty) return;
-
-      final platformFile = result.files.first;
-      
-      String? filePath = platformFile.path;
-      
-      if (filePath == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('На веб-платформах требуется дополнительная обработка')),
-        );
-        return;
-      }
-
-      setState(() {
-        _isLoading = true;
-      });
-
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-
-      if (token == null) {
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final api = ApiService();
-      final response = await api.changeAvatar(token, File(filePath));
-
-      final isSuccess = response["success"];
-      
-      if (isSuccess == true) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response["message"] ?? 'Аватар обновлен'),
-              backgroundColor: Colors.teal,
-            ),
-          );
-        }
-        await _loadProfile();
-      } else {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response["message"] ?? 'Ошибка'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
   
   @override
   Widget build(BuildContext context) {

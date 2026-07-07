@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/add_members_screen.dart';
-import 'package:flutter_application_1/screens/users_profile_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,7 +23,6 @@ class _GroupInfoPage extends State<GroupInfoPage> {
   String? _createdAt = "?";
   String _description = "Неизвестно";
   String _avatarPath = "";
-  String _creatorId = "Неизвестно";
 
   final String _baseURL = "http://45.132.255.102:8000/";
   final ApiService _api = ApiService();
@@ -116,7 +114,6 @@ class _GroupInfoPage extends State<GroupInfoPage> {
           _groupName = data["name"] ?? "Неизвестно";
           _description = data["description"] ?? "Неизвестно";
           _avatarPath = data["avatar_path"] ?? "";
-          _creatorId = data["creator_id"]?.toString() ?? "Неизвестно";
           _createdAt = data["created_at"];
         });
       } else {
@@ -682,14 +679,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
           username,
           'Присоединился: $joinedAt',
           avatarPath: avatarPath,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => UsersProfileScreen(userId: id),
-              ),
-            );
-          },
+          onTap: () => print("Открытие профиля"),
           onEdit: id != null ? () => _kickMember(id, username) : null,
           roleLabel: role,
         ),
