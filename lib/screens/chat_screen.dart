@@ -30,6 +30,8 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  static const String _baseUrl = 'http://45.132.255.102:8000';
+
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ApiService _apiService = ApiService();
@@ -45,6 +47,13 @@ class _ChatScreenState extends State<ChatScreen> {
   StreamSubscription? _wsSubscription;
   String? _groupAvatarPath;
   String? _groupDescription;
+
+  String _getFullUrl(String path) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    return '$_baseUrl/$path';
+  }
 
   @override
   void initState() {
@@ -76,7 +85,7 @@ class _ChatScreenState extends State<ChatScreen> {
     await _loadGroupDetails();
     await _loadMessages();
 
-    _wsService.connect('http://45.132.255.102:8000', widget.groupId, _token!);
+    _wsService.connect(_baseUrl, widget.groupId, _token!);
 
     _wsSubscription = _wsService.messageStream.listen((message) {
       _handleWebSocketMessage(message);
@@ -127,7 +136,6 @@ class _ChatScreenState extends State<ChatScreen> {
           _isLoading = false;
         });
       }
-      
     }
   }
 
@@ -530,7 +538,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _reconnectWebSocket() {
     if (_token != null) {
-      _wsService.connect('ws://45.132.255.102:8000', widget.groupId, _token!);
+      _wsService.connect(_baseUrl, widget.groupId, _token!);
       _wsSubscription = _wsService.messageStream.listen((message) {
         _handleWebSocketMessage(message);
       });
@@ -591,12 +599,13 @@ class _ChatScreenState extends State<ChatScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _wsService.isConnected ? Colors.greenAccent : Colors.redAccent,
-                  boxShadow: _wsService.isConnected
-                      ? [BoxShadow(color: Colors.greenAccent.withValues(alpha: 0.6), blurRadius: 6)]
-                      : null,
                 ),
               ),
             ),
+          ),
+          Text(
+            _wsService.isConnected ? "Соединено" : "Соединение...",
+            style: TextStyle(color: _wsService.isConnected ? Colors.greenAccent : Colors.redAccent),
           ),
 
           PopupMenuButton<String>(
@@ -876,9 +885,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final authorName = message['author_name'] ?? message['author_username'] ?? 'Пользователь';
     
     if (avatarPath != null && avatarPath.toString().isNotEmpty) {
-      final url = avatarPath.toString().startsWith('http') 
-          ? avatarPath.toString() 
-          : 'http://45.132.255.102:8000/$avatarPath';
+      final url = _getFullUrl(avatarPath.toString());
       return CircleAvatar(
         radius: 16,
         backgroundImage: NetworkImage(url),
@@ -900,8 +907,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildFileAttachment(String filePath, String fileName, [int? fileSize]) {
-    final baseUrl = 'http://45.132.255.102:8000';
-    final fileUrl = filePath.startsWith('http') ? filePath : '$baseUrl/$filePath';
+    final fileUrl = _getFullUrl(filePath);
 
     final isImage = fileName.toLowerCase().endsWith('.jpg') ||
         fileName.toLowerCase().endsWith('.jpeg') ||
@@ -914,22 +920,23 @@ class _ChatScreenState extends State<ChatScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.25),
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.25),
           width: 1,
         ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
         child: isImage
-            ? _buildImagePreview(fileUrl, fileName, fileSize)
-            : _buildFilePreviewWidget(fileName, fileSize),
+            ? _buildImagePreview(filePath, fileName, fileSize)
+            : _buildFilePreviewWidget(filePath, fileName, fileSize),
       ),
     );
   }
 
-  Widget _buildImagePreview(String url, String fileName, [int? fileSize]) {
+  Widget _buildImagePreview(String filePath, String fileName, [int? fileSize]) {
+    final url = _getFullUrl(filePath);
     return GestureDetector(
-      onTap: () => _showImageFullScreen(url),
+      onTap: () => _showImageFullScreen(filePath),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 250, maxHeight: 250),
         child: Stack(
@@ -1002,7 +1009,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildFilePreviewWidget(String fileName, [int? fileSize]) {
+  Widget _buildFilePreviewWidget(String filePath, String fileName, [int? fileSize]) {
     IconData fileIcon;
     Color iconColor;
 
@@ -1024,7 +1031,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     return GestureDetector(
-      onTap: () => _downloadFile(fileName),
+      onTap: () => _downloadFile(filePath),
       child: Container(
         padding: const EdgeInsets.all(12),
         color: Theme.of(context).brightness == Brightness.dark
@@ -1085,7 +1092,8 @@ class _ChatScreenState extends State<ChatScreen> {
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} ГБ';
   }
 
-  void _showImageFullScreen(String imageUrl) {
+  void _showImageFullScreen(String filePath) {
+    final url = _getFullUrl(filePath);
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -1097,14 +1105,14 @@ class _ChatScreenState extends State<ChatScreen> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.download_rounded),
-                onPressed: () => _downloadFile(imageUrl.split('/').last),
+                onPressed: () => _downloadFile(filePath),
               ),
             ],
           ),
           body: Center(
             child: InteractiveViewer(
               child: Image.network(
-                imageUrl,
+                url,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return const Center(
@@ -1121,7 +1129,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _downloadFile(String filePath) async {
-    final url = 'http://45.132.255.102:8000/$filePath';
+    final url = _getFullUrl(filePath);
     final fileName = filePath.split('/').last;
 
     try {
@@ -1268,9 +1276,6 @@ class _ChatScreenState extends State<ChatScreen> {
                   onTap: _pickFile,
                   child: Icon(
                     _selectedFile != null ? Icons.file_copy : Icons.attach_file_rounded,
-                    color: _selectedFile != null 
-                        ? Theme.of(context).colorScheme.primary 
-                        : Colors.grey[500],
                     size: 20,
                   ),
                 ),
@@ -1303,7 +1308,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                      : const Icon(Icons.send_rounded, size: 20),
                 ),
               ],
             ),
@@ -1322,7 +1327,7 @@ class _ChatScreenState extends State<ChatScreen> {
       height: 40,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2.0),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3), width: 2.0),
       ),
       child: Material(
         color: Colors.transparent,
@@ -1412,7 +1417,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (avatarPath != null && avatarPath.isNotEmpty) {
       return CircleAvatar(
         radius: 20,
-        backgroundImage: NetworkImage('http://45.132.255.102:8000/$avatarPath'),
+        backgroundImage: NetworkImage(_getFullUrl(avatarPath)),
       );
     }
 

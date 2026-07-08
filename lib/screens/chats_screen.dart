@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screens/login_screen.dart';
 import 'package:flutter_application_1/screens/chats_page.dart';
 import 'package:flutter_application_1/screens/profile_page.dart';
 import 'package:flutter_application_1/screens/settings_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatsScreen extends StatefulWidget {
   const ChatsScreen({super.key});
@@ -15,29 +13,11 @@ class ChatsScreen extends StatefulWidget {
 class _ChatsScreenState extends State<ChatsScreen> {
   int currentPageIndex = 0;
 
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
-    
-    if (!mounted) return;
-    
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Мессенджер'),
-        actions: [
-          IconButton(
-            onPressed: _logout,
-            icon: const Icon(Icons.logout),
-          )
-        ],
       ),
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {
