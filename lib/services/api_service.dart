@@ -307,5 +307,19 @@ class ApiService {
       throw Exception('Ошибка: $e');
     }
   }
+
+  Future<Map<String, dynamic>> createGroup(String token, String name) async {
+    final Uri url = Uri.parse('$baseUrl/groups');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+        body: jsonEncode({"name": name}),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
   
 }

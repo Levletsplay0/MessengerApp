@@ -1284,12 +1284,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final firstLetter = name.isNotEmpty ? name[0].toUpperCase() : '?';
     final colors = [
+      Colors.red,
       Colors.blue,
       Colors.green,
       Colors.purple,
       Colors.orange,
       Colors.teal,
-      Colors.pink
+      Colors.pink,
+      Colors.indigo,
     ];
     final color = colors[name.length % colors.length];
 

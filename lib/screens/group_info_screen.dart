@@ -738,7 +738,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
         if (onEdit != null)
           OutlinedButton.icon(
             onPressed: onEdit,
-            icon: const Icon(Icons.arrow_upward, size: 16),
+            icon: const Icon(Icons.group_remove_outlined, size: 16),
             label: const Text("Кик"),
             style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
           ),
