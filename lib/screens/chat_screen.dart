@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_1/screens/group_info_screen.dart';
 import 'package:flutter_application_1/screens/users_profile_screen.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
@@ -288,7 +291,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               ListTile(
                 leading: Icon(Icons.copy_rounded, color: Theme.of(context).colorScheme.primary),
-                title: const Text('Копировать текст'),
+                title: const Text('Копировать текст сообщения'),
                 onTap: () {
                   Navigator.pop(context);
                   if (content.isNotEmpty) {
@@ -304,7 +307,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               if (hasFile)
                 ListTile(
-                  leading: Icon(Icons.download_rounded, color: Theme.of(context).colorScheme.primary),
+                  leading: Icon(Icons.download_outlined, color: Theme.of(context).colorScheme.primary),
                   title: const Text('Скачать файл'),
                   onTap: () {
                     Navigator.pop(context);
@@ -740,11 +743,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
     String? filePath;
     String? fileName;
+    int? fileSize;
 
     if (message['file'] != null && message['file'] is Map) {
       final fileData = message['file'] as Map<String, dynamic>;
       filePath = fileData['path'];
       fileName = fileData['name'] ?? 'Файл';
+      fileSize = fileData['size'];
     }
 
     final hasFile = filePath != null && filePath.isNotEmpty && filePath != 'null';
@@ -815,7 +820,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                       ),
                     if (hasFile)
-                      _buildFileAttachment(filePath, fileName!),
+                      _buildFileAttachment(filePath, fileName!, fileSize),
                     if (content.isNotEmpty)
                       SelectableText(
                         content,
@@ -894,7 +899,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildFileAttachment(String filePath, String fileName) {
+  Widget _buildFileAttachment(String filePath, String fileName, [int? fileSize]) {
     final baseUrl = 'http://45.132.255.102:8000';
     final fileUrl = filePath.startsWith('http') ? filePath : '$baseUrl/$filePath';
 
@@ -916,13 +921,13 @@ class _ChatScreenState extends State<ChatScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
         child: isImage
-            ? _buildImagePreview(fileUrl, fileName)
-            : _buildFilePreviewWidget(fileName),
+            ? _buildImagePreview(fileUrl, fileName, fileSize)
+            : _buildFilePreviewWidget(fileName, fileSize),
       ),
     );
   }
 
-  Widget _buildImagePreview(String url, String fileName) {
+  Widget _buildImagePreview(String url, String fileName, [int? fileSize]) {
     return GestureDetector(
       onTap: () => _showImageFullScreen(url),
       child: Container(
@@ -980,7 +985,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 child: Text(
-                  fileName,
+                  fileSize != null ? '$fileName • ${_formatFileSize(fileSize)}' : fileName,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -997,7 +1002,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildFilePreviewWidget(String fileName) {
+  Widget _buildFilePreviewWidget(String fileName, [int? fileSize]) {
     IconData fileIcon;
     Color iconColor;
 
@@ -1043,7 +1048,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    _formatFileType(fileName),
+                    _formatFileType(fileName, fileSize),
                     style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                   ),
                 ],
@@ -1057,18 +1062,27 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  String _formatFileType(String fileName) {
+  String _formatFileType(String fileName, [int? fileSize]) {
     final extension = fileName.split('.').last.toLowerCase();
+    String sizeStr = fileSize != null ? ' • ${_formatFileSize(fileSize)}' : '';
+    
     if (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(extension)) {
-      return 'Изображение • ${extension.toUpperCase()}';
+      return 'Изображение • ${extension.toUpperCase()}$sizeStr';
     } else if (['mp4', 'avi', 'mov'].contains(extension)) {
-      return 'Видео • ${extension.toUpperCase()}';
+      return 'Видео • ${extension.toUpperCase()}$sizeStr';
     } else if (['mp3', 'wav', 'ogg'].contains(extension)) {
-      return 'Аудио • ${extension.toUpperCase()}';
+      return 'Аудио • ${extension.toUpperCase()}$sizeStr';
     } else if (extension == 'pdf') {
-      return 'PDF документ';
+      return 'PDF документ$sizeStr';
     }
-    return 'Файл • ${extension.toUpperCase()}';
+    return 'Файл • ${extension.toUpperCase()}$sizeStr';
+  }
+
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes Б';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} КБ';
+    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} МБ';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} ГБ';
   }
 
   void _showImageFullScreen(String imageUrl) {
@@ -1106,15 +1120,134 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _downloadFile(String fileName) {
+  Future<void> _downloadFile(String filePath) async {
+    final url = 'http://45.132.255.102:8000/$filePath';
+    final fileName = filePath.split('/').last;
+
+    try {
+      if (Platform.isAndroid) {
+        var status = await Permission.manageExternalStorage.status;
+        if (!status.isGranted) {
+          status = await Permission.manageExternalStorage.request();
+          if (!status.isGranted) {
+            _showSnackBar('Разрешение на управление хранилищем отклонено');
+            return;
+          }
+        }
+      }
+
+      Directory? saveDirectory;
+      if (Platform.isAndroid) {
+        saveDirectory = Directory('/storage/emulated/0/Download');
+        if (!await saveDirectory.exists()) {
+          saveDirectory = await getExternalStorageDirectory();
+        }
+      } else if (Platform.isIOS) {
+        saveDirectory = await getApplicationDocumentsDirectory();
+      } else {
+        saveDirectory = await getApplicationDocumentsDirectory();
+      }
+
+      if (saveDirectory == null) {
+        _showSnackBar('Не удалось получить директорию для сохранения');
+        return;
+      }
+
+      final savePath = '${saveDirectory.path}/$fileName';
+      final file = File(savePath);
+
+      if (await file.exists()) {
+        _showSnackBar('Файл уже скачан: $fileName');
+        return;
+      }
+
+      final dio = Dio();
+      final progressNotifier = ValueNotifier<double>(0.0);
+      bool isCancelled = false;
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: const Text('Скачивание файла'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(fileName, overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 16),
+                    ValueListenableBuilder<double>(
+                      valueListenable: progressNotifier,
+                      builder: (context, progress, child) {
+                        return Column(
+                          children: [
+                            LinearProgressIndicator(value: progress),
+                            const SizedBox(height: 8),
+                            Text('${(progress * 100).toStringAsFixed(0)}%'),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      isCancelled = true;
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Отмена'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+
+      await dio.download(
+        url,
+        savePath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            progressNotifier.value = received / total;
+          }
+        },
+      );
+
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      if (isCancelled) {
+        if (await file.exists()) await file.delete();
+        _showSnackBar('Загрузка отменена');
+      } else {
+        _showSnackBar('Файл сохранен: $fileName');
+      }
+
+    } catch (e) {
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+      _showSnackBar('Ошибка: $e');
+      debugPrint('Download error: $e');
+    }
+  }
+
+  void _showSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Скачивание: $fileName'),
+        content: Text(message),
         behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
       ),
     );
   }
-
+  
   Widget _buildInputArea() {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
@@ -1206,6 +1339,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final fileName = _selectedFile!.path.split('/').last;
     final extension = fileName.contains('.') ? '.${fileName.split('.').last}' : '';
     final nameWithoutExt = fileName.contains('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+    final fileSize = _selectedFile!.lengthSync();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -1247,7 +1381,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  extension.toUpperCase(),
+                  '${extension.toUpperCase()} • ${_formatFileSize(fileSize)}',
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey[500],
