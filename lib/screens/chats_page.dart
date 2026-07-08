@@ -137,8 +137,8 @@ class _ChatsPageState extends State<ChatsPage> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                          onTap: () {
-                            Navigator.push(
+                          onTap: () async {
+                            final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ChatScreen(
@@ -148,6 +148,10 @@ class _ChatsPageState extends State<ChatsPage> {
                                 ),
                               ),
                             );
+
+                            if (result == true) {
+                              _loadChats();
+                            }
                           },
                         );
                       },

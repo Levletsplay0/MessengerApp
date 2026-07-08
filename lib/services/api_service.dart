@@ -294,5 +294,18 @@ class ApiService {
       throw Exception('Ошибка: $e');
     }
   }
+
+  Future<Map<String, dynamic>> leaveUserFromGroup(String token, int groupId) async {
+    final Uri url = Uri.parse('$baseUrl/groups/$groupId/leave');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
   
 }

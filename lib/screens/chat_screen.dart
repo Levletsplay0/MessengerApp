@@ -446,6 +446,94 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _leaveGroup() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_rounded, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Выйти из группы?'),
+          ],
+        ),
+        content: const Text('Вы покидаете эту группу. Это действие нельзя отменить.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Выйти'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && _token != null) {
+      try {
+        _wsSubscription?.cancel();
+        _wsService.disconnect();
+        
+        setState(() => _isLoading = true); 
+
+        final response = await _apiService.leaveUserFromGroup(_token!, widget.groupId);
+        
+        if (response['success'] == true) {
+          String message = response["message"];
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(message),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            
+            Navigator.of(context).pop(true); 
+          }
+        } else {
+          if (mounted) {
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(response['message'] ?? 'Ошибка при выходе из группы'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            
+            _reconnectWebSocket(); 
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Ошибка: $e'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          _reconnectWebSocket();
+        }
+      }
+    }
+  }
+
+  void _reconnectWebSocket() {
+    if (_token != null) {
+      _wsService.connect('ws://45.132.255.102:8000', widget.groupId, _token!);
+      _wsSubscription = _wsService.messageStream.listen((message) {
+        _handleWebSocketMessage(message);
+      });
+    }
+  }
+
   @override
   void dispose() {
     _wsSubscription?.cancel();
@@ -506,6 +594,28 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
             ),
+          ),
+
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            tooltip: 'Меню',
+            onSelected: (value) {
+              if (value == 'leave_group') {
+                _leaveGroup();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                value: 'leave_group',
+                child: Row(
+                  children: [
+                    const Icon(Icons.exit_to_app, color: Colors.redAccent, size: 20),
+                    const SizedBox(width: 12),
+                    const Text('Выйти из группы'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
