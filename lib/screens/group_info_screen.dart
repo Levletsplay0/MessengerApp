@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/add_members_screen.dart';
+import 'package:flutter_application_1/screens/users_profile_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -90,7 +91,6 @@ class _GroupInfoPage extends State<GroupInfoPage> {
         final data = response["data"];
         setState(() {
           _members = data is List ? data : [];
-          _membersCount = _members.length;
           _isLoading = false;
         });
       } else {
@@ -115,6 +115,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
           _description = data["description"] ?? "Неизвестно";
           _avatarPath = data["avatar_path"] ?? "";
           _createdAt = data["created_at"];
+          _membersCount = data["member_count"];
         });
       } else {
         _showError('Ошибка: $message');
@@ -487,34 +488,39 @@ class _GroupInfoPage extends State<GroupInfoPage> {
   }
 
   Widget _buildContentView() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          _buildAvatarSection(),
-          const SizedBox(height: 16),
-          _buildAvatarButtons(),
-          const SizedBox(height: 10),
-          _buildNameSection(),
-          _buildMetaSection(),
-          const SizedBox(height: 25),
-          _buildDescriptionSection(),
-          const SizedBox(height: 25),
-          _buildMembersSection(),
-        ],
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            _buildAvatarSection(),
+            const SizedBox(height: 16),
+            _buildAvatarButtons(),
+            const SizedBox(height: 10),
+            _buildNameSection(),
+            _buildMetaSection(),
+            const SizedBox(height: 25),
+            _buildDescriptionSection(),
+            const SizedBox(height: 25),
+            _buildMembersSection(),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildAvatarSection() {
-    return CircleAvatar(
-      radius: 50,
-      backgroundImage: _avatarPath.isNotEmpty
-          ? NetworkImage("$_baseURL$_avatarPath") as ImageProvider
-          : null,
-      child: _avatarPath.isEmpty
-          ? const Icon(Icons.group, size: 50, color: Colors.grey)
-          : null,
+    return GestureDetector(
+      onTap: _showFullAvatar,
+      child: CircleAvatar(
+        radius: 50,
+        backgroundImage: _avatarPath.isNotEmpty
+            ? NetworkImage("$_baseURL$_avatarPath") as ImageProvider
+            : null,
+        child: _avatarPath.isEmpty
+            ? const Icon(Icons.group, size: 50, color: Colors.grey)
+            : null,
+      ),
     );
   }
 
@@ -679,7 +685,12 @@ class _GroupInfoPage extends State<GroupInfoPage> {
           username,
           'Присоединился: $joinedAt',
           avatarPath: avatarPath,
-          onTap: () => print("Открытие профиля"),
+          onTap: () {
+            Navigator.push(
+              context, 
+              MaterialPageRoute(builder: (context) => UsersProfileScreen(userId: id))
+            );
+          },
           onEdit: id != null ? () => _kickMember(id, username) : null,
           roleLabel: role,
         ),
@@ -837,5 +848,43 @@ class _GroupInfoPage extends State<GroupInfoPage> {
     } catch (e) {
       return "Неизвестно";
     }
+  }
+
+  void _showFullAvatar() {
+    if (_avatarPath.isEmpty) return;
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              Center(
+                child: InteractiveViewer(
+                  child: Image.network(
+                    "$_baseURL$_avatarPath",
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.broken_image, color: Colors.white, size: 50);
+                    },
+                  ),
+                ),
+              ),
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 16,
+                right: 16,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                  onPressed: () => Navigator.pop(context),
+                  tooltip: "Закрыть",
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

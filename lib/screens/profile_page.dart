@@ -24,6 +24,8 @@ class _ProfilePageState extends State<ProfilePage> {
   String _lastName = '';
   String? _avatarPath;
   String? _description;
+  final String _baseURL = "http://45.132.255.102:8000/";
+
 
 
   @override
@@ -334,32 +336,16 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildAvatar() {
-    if (_avatarPath != null && _avatarPath!.isNotEmpty) {
-      return Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.blue, width: 2),
-          color: Colors.transparent,
-        ),
-        child: CircleAvatar(
-          radius: 50,
-          backgroundImage: NetworkImage(
-            'http://45.132.255.102:8000/$_avatarPath',
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.blue, width: 2),
-        color: Colors.transparent,
-      ),
-      child: const CircleAvatar(
+    return GestureDetector(
+      onTap: _showFullAvatar,
+      child: CircleAvatar(
         radius: 50,
-        backgroundColor: Colors.transparent,
-        child: Icon(Icons.person_rounded, size: 50),
+        backgroundImage: _avatarPath != null
+            ? NetworkImage("$_baseURL$_avatarPath") as ImageProvider
+            : null,
+        child: _avatarPath!.isEmpty
+            ? const Icon(Icons.group, size: 50, color: Colors.grey)
+            : null,
       ),
     );
   }
@@ -418,6 +404,42 @@ class _ProfilePageState extends State<ProfilePage> {
     if (result == true && mounted) {
       await _loadProfile();
     }
+  }
+
+  void _showFullAvatar() {    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              Center(
+                child: InteractiveViewer(
+                  child: Image.network(
+                    "$_baseURL$_avatarPath",
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.broken_image, color: Colors.white, size: 50);
+                    },
+                  ),
+                ),
+              ),
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 16,
+                right: 16,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                  onPressed: () => Navigator.pop(context),
+                  tooltip: "Закрыть",
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
 }

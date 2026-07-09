@@ -47,6 +47,7 @@ class _ChatScreenState extends State<ChatScreen> {
   StreamSubscription? _wsSubscription;
   String? _groupAvatarPath;
   String? _groupDescription;
+  int _membersCount = 0;
 
   String _getFullUrl(String path) {
     if (path.startsWith('http://') || path.startsWith('https://')) {
@@ -99,6 +100,7 @@ class _ChatScreenState extends State<ChatScreen> {
         setState(() {
           _groupAvatarPath = response['data']['avatar_path'];
           _groupDescription = response['data']['description'];
+          _membersCount = response["data"]["member_count"];
         });
       }
     } catch (e) {
@@ -299,7 +301,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               ListTile(
                 leading: Icon(Icons.copy_rounded, color: Theme.of(context).colorScheme.primary),
-                title: const Text('Копировать текст сообщения'),
+                title: const Text('Копировать'),
                 onTap: () {
                   Navigator.pop(context);
                   if (content.isNotEmpty) {
@@ -360,7 +362,7 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             Icon(Icons.edit_rounded, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
-            const Text('Редактировать сообщение'),
+            const Text('Редактировать'),
           ],
         ),
         content: TextField(
@@ -425,7 +427,7 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             Icon(Icons.warning_rounded, color: Colors.orange),
             SizedBox(width: 8),
-            Text('Удалить сообщение?'),
+            Text('Удалить?'),
           ],
         ),
         content: const Text('Это действие нельзя будет отменить.'),
@@ -576,12 +578,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (_groupDescription != null && _groupDescription!.isNotEmpty)
-                      Text(
-                        _groupDescription!,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                    Text(
+                      '$_membersCount участников',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
@@ -726,7 +727,7 @@ class _ChatScreenState extends State<ChatScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -792,7 +793,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                 decoration: BoxDecoration(
                   color: isOwn
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.18)
+                      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.18)
                       : Theme.of(context).brightness == Brightness.dark
                           ? Colors.grey[850]
                           : Colors.grey[200],
@@ -850,7 +851,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           Icon(
                             Icons.done_all_rounded,
                             size: 14,
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
                           ),
                         ],
                       ],
@@ -988,7 +989,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [Colors.black.withOpacity(0.65), Colors.transparent],
+                    colors: [Colors.black.withValues(alpha: 0.65), Colors.transparent],
                   ),
                 ),
                 child: Text(
@@ -1261,7 +1262,7 @@ class _ChatScreenState extends State<ChatScreen> {
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3))),
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.3))),
       ),
       child: SafeArea(
         top: false,
@@ -1350,10 +1351,10 @@ class _ChatScreenState extends State<ChatScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -1362,7 +1363,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Container(
             padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
