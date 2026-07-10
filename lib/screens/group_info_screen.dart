@@ -345,7 +345,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
 
   Future<void> _editGroupName() async {
     final newName = await _showEditDialog(
-      title: 'Изменить название',
+      title: 'Смена названия',
       initialValue: _groupName,
       titleIcon: Icons.edit,
       maxLength: 20,
@@ -362,7 +362,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
   Future<void> _editGroupDescription() async {
     final initial = _description == "Неизвестно" ? "" : _description;
     final newDescription = await _showEditDialog(
-      title: 'Изменить описание',
+      title: 'Смена описания',
       initialValue: initial,
       titleIcon: Icons.description,
       maxLength: 100,
@@ -559,8 +559,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
         Flexible(
           child: Text(
             _groupName,
-            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
         ),

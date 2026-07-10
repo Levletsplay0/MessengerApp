@@ -73,7 +73,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _initConnectivity() async {
-    // Проверяем начальное состояние
     try {
       final result = await _connectivity.checkConnectivity();
       _updateConnectionStatus(result);
@@ -82,7 +81,6 @@ class _ChatScreenState extends State<ChatScreen> {
       _updateConnectionStatus([ConnectivityResult.none]);
     }
 
-    // Слушаем изменения подключения
     _connectivitySubscription = _connectivity.onConnectivityChanged.listen((result) {
       _updateConnectionStatus(result);
     });
@@ -101,18 +99,15 @@ class _ChatScreenState extends State<ChatScreen> {
       });
 
       if (!hasConnection) {
-        // Интернет пропал - отключаем WebSocket
         print('Интернет пропал, отключаем WebSocket');
         _wsSubscription?.cancel();
         _wsService.disconnect();
         _wasDisconnected = true;
       } else if (_wasDisconnected) {
-        // Интернет восстановился - переподключаем WebSocket
         print('Интернет восстановлен, переподключаем WebSocket');
         _wasDisconnected = false;
         _reconnectWebSocket();
         
-        // Показываем уведомление о восстановлении
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -134,7 +129,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels <= 0 && 
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent && 
         !_isLoadingMore && 
         _hasMoreMessages &&
         !_isLoading) {
@@ -195,10 +190,11 @@ class _ChatScreenState extends State<ChatScreen> {
       if (response['success'] == true && response['data'] != null) {
         setState(() {
           _messages = List.from(response['data']);
+          // Сортируем в обратном порядке для reverse: true (новые сообщения в начале)
           _messages.sort((a, b) {
             final dateA = DateTime.parse(a['sent_at']);
             final dateB = DateTime.parse(b['sent_at']);
-            return dateA.compareTo(dateB);
+            return dateB.compareTo(dateA);
           });
           _currentOffset = _messages.length;
           _hasMoreMessages = _messages.length >= 50;
@@ -245,30 +241,22 @@ class _ChatScreenState extends State<ChatScreen> {
           return;
         }
 
-        double? previousScrollOffset;
-        if (_scrollController.hasClients) {
-          previousScrollOffset = _scrollController.offset;
-        }
-
         setState(() {
-          _messages.insertAll(0, newMessages);
+          // Добавляем старые сообщения в конец списка (физически)
+          _messages.addAll(newMessages);
+          // Сортируем в обратном порядке
           _messages.sort((a, b) {
             final dateA = DateTime.parse(a['sent_at']);
             final dateB = DateTime.parse(b['sent_at']);
-            return dateA.compareTo(dateB);
+            return dateB.compareTo(dateA);
           });
           _currentOffset += newMessages.length;
           _hasMoreMessages = newMessages.length >= 50;
           _isLoadingMore = false;
         });
 
-        if (previousScrollOffset != null && _scrollController.hasClients) {
-          Future.delayed(const Duration(milliseconds: 50), () {
-            if (_scrollController.hasClients) {
-              _scrollController.jumpTo(previousScrollOffset!);
-            }
-          });
-        }
+        // При reverse: true не нужно корректировать позицию прокрутки
+        // ListView автоматически сохраняет позицию
       } else {
         setState(() {
           _isLoadingMore = false;
@@ -291,12 +279,8 @@ class _ChatScreenState extends State<ChatScreen> {
         setState(() {
           final exists = _messages.any((m) => m['id'] == data['id']);
           if (!exists) {
-            _messages.add(data);
-            _messages.sort((a, b) {
-              final dateA = DateTime.parse(a['sent_at']);
-              final dateB = DateTime.parse(b['sent_at']);
-              return dateA.compareTo(dateB);
-            });
+            // Добавляем новое сообщение в начало списка (индекс 0)
+            _messages.insert(0, data);
           }
         });
         
@@ -320,12 +304,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      // При reverse: true "дно" это индекс 0
+      _scrollController.jumpTo(0);
       
       Future.delayed(const Duration(milliseconds: 50), () {
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
+            0,
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOut,
           );
@@ -336,12 +321,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _smartScrollToBottom() {
     if (_scrollController.hasClients) {
-      final isAtBottom = _scrollController.offset >= 
-          _scrollController.position.maxScrollExtent - 100;
+      // При reverse: true проверяем, находится ли пользователь в начале (новые сообщения)
+      final isAtBottom = _scrollController.offset <= 100;
       
       if (isAtBottom) {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
+          0,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
@@ -373,12 +358,8 @@ class _ChatScreenState extends State<ChatScreen> {
           setState(() {
             final exists = _messages.any((m) => m['id'] == response['data']['id']);
             if (!exists) {
-              _messages.add(response['data']);
-              _messages.sort((a, b) {
-                final dateA = DateTime.parse(a['sent_at']);
-                final dateB = DateTime.parse(b['sent_at']);
-                return dateA.compareTo(dateB);
-              });
+              // Добавляем в начало списка
+              _messages.insert(0, response['data']);
             }
           });
         }
@@ -728,8 +709,11 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
         scrolledUnderElevation: 1,
+        titleSpacing: 4,
         title: GestureDetector(
-          onTap: (){Navigator.push(context, MaterialPageRoute(builder: (context) => GroupInfoPage(groupId: widget.groupId)));},
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => GroupInfoPage(groupId: widget.groupId)));
+          },
           child: Row(
             children: [
               _buildGroupAvatar(widget.groupName, avatarPath),
@@ -740,7 +724,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   children: [
                     Text(
                       widget.groupName,
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
@@ -748,6 +732,39 @@ class _ChatScreenState extends State<ChatScreen> {
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       overflow: TextOverflow.ellipsis,
                     ),
+                    Row(
+                      children: [
+                        Center(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _wsService.isConnected && _isConnectedToInternet 
+                                  ? Colors.greenAccent 
+                                  : Colors.redAccent,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 5,),
+                        Text(
+                          _wsService.isConnected && _isConnectedToInternet 
+                              ? "Соединено" 
+                              : "Нет соединения",
+                          style: TextStyle(
+                            color: _wsService.isConnected && _isConnectedToInternet 
+                                ? Colors.greenAccent 
+                                : Colors.redAccent,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold
+                          ),
+                        ),
+                        
+                      ],
+                    )
+                    
+                    
                   ],
                 ),
               ),
@@ -755,32 +772,9 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Center(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _wsService.isConnected && _isConnectedToInternet 
-                      ? Colors.greenAccent 
-                      : Colors.redAccent,
-                ),
-              ),
-            ),
-          ),
-          Text(
-            _wsService.isConnected && _isConnectedToInternet 
-                ? "Соединено" 
-                : "Нет соединения",
-            style: TextStyle(
-              color: _wsService.isConnected && _isConnectedToInternet 
-                  ? Colors.greenAccent 
-                  : Colors.redAccent,
-            ),
-          ),
+          
+          
+          
 
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
@@ -866,11 +860,12 @@ class _ChatScreenState extends State<ChatScreen> {
                           )
                         : ListView.builder(
                             controller: _scrollController,
-                            reverse: false,
+                            reverse: true, // КЛЮЧЕВОЕ ИЗМЕНЕНИЕ
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             itemCount: _messages.length + (_hasMoreMessages ? 1 : 0),
                             itemBuilder: (context, index) {
-                              if (index == 0 && _hasMoreMessages) {
+                              // При reverse: true индикатор загрузки старых сообщений в конце
+                              if (index == _messages.length && _hasMoreMessages) {
                                 return _isLoadingMore
                                     ? const Padding(
                                         padding: EdgeInsets.symmetric(vertical: 16),
@@ -881,15 +876,15 @@ class _ChatScreenState extends State<ChatScreen> {
                                     : const SizedBox.shrink();
                               }
 
-                              final messageIndex = _hasMoreMessages ? index - 1 : index;
-                              final message = _messages[messageIndex];
+                              final message = _messages[index];
                               final isOwn = message['author_id'] == _currentUserId;
-                              final showDate = messageIndex == 0 || _shouldShowDateSeparator(messageIndex);
+                              // При reverse: true проверяем следующий элемент (более старое сообщение)
+                              final showDate = index == _messages.length - 1 || _shouldShowDateSeparator(index);
 
                               return Column(
                                 children: [
-                                  if (showDate) _buildDateSeparator(message['sent_at']),
                                   _buildMessageBubble(message, isOwn),
+                                  if (showDate) _buildDateSeparator(message['sent_at']),
                                 ],
                               );
                             },
@@ -902,16 +897,17 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   bool _shouldShowDateSeparator(int index) {
-    if (index == 0) return false;
-    final current = DateTime.parse(_messages[index]['sent_at']);
-    final previous = DateTime.parse(_messages[index - 1]['sent_at']);
-    return current.day != previous.day ||
-        current.month != previous.month ||
-        current.year != previous.year;
+    // При reverse: true проверяем следующий элемент (более старое сообщение)
+    if (index >= _messages.length - 1) return false;
+    final current = DateTime.parse(_messages[index]['sent_at']).toLocal();
+    final next = DateTime.parse(_messages[index + 1]['sent_at']).toLocal();
+    return current.day != next.day ||
+        current.month != next.month ||
+        current.year != next.year;
   }
 
   Widget _buildDateSeparator(String dateStr) {
-    final date = DateTime.parse(dateStr);
+    final date = DateTime.parse(dateStr).toLocal(); // ИСПРАВЛЕНО: добавлен .toLocal()
     final now = DateTime.now();
     String text;
 
@@ -949,7 +945,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildMessageBubble(dynamic message, bool isOwn) {
     final content = message['content'] ?? '';
-    final sentAt = DateTime.parse(message['sent_at']);
+    final sentAt = DateTime.parse(message['sent_at']).toLocal(); // ИСПРАВЛЕНО: добавлен .toLocal()
     final timeStr = DateFormat('HH:mm').format(sentAt);
     final isEdited = message['edited_at'] != null;
     final authorName = message['author_name'] ?? message['author_username'] ?? 'Пользователь';

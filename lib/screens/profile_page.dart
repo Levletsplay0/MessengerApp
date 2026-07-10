@@ -40,6 +40,7 @@ class _ProfilePageState extends State<ProfilePage> {
       final token = prefs.getString('auth_token');
 
       if (token == null) {
+        if (!mounted) return;
         setState(() {
           _error = 'Не авторизован';
           _isLoading = false;
@@ -55,13 +56,14 @@ class _ProfilePageState extends State<ProfilePage> {
         final data = response["data"];
         
         if (data == null) {
+          if (!mounted) return;
           setState(() {
             _error = 'Данные профиля пусты';
             _isLoading = false;
           });
           return;
         }
-        
+        if (!mounted) return;
         setState(() {
           _userId = data["id"] ?? '';
           _username = data["username"] ?? '';
@@ -74,6 +76,7 @@ class _ProfilePageState extends State<ProfilePage> {
         });
       } else {
         final message = response["message"] ?? 'Неизвестная ошибка';
+        if (!mounted) return;
         setState(() {
           _error = message;
           _isLoading = false;
@@ -83,6 +86,7 @@ class _ProfilePageState extends State<ProfilePage> {
       
       
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -94,6 +98,7 @@ class _ProfilePageState extends State<ProfilePage> {
     try{
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
+      if (!mounted) return;
       setState(() {
         _isLoading = true;
       });
@@ -155,6 +160,7 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
 
+      if (!mounted) return;
       setState(() {
         _isLoading = true;
       });
@@ -163,6 +169,7 @@ class _ProfilePageState extends State<ProfilePage> {
       final token = prefs.getString('auth_token');
 
       if (token == null) {
+        if (!mounted) return;
         setState(() {
           _isLoading = false;
         });
@@ -230,6 +237,7 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
+                if (!mounted) return;
                 setState(() {
                   _isLoading = true;
                   _error = null;
