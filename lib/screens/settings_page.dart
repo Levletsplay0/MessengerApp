@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/login_screen.dart';
 import 'package:flutter_application_1/providers/theme_provider.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -228,7 +229,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         title: const Text('Очистить кэш'),
                         subtitle: const Text('Удалить временные файлы'),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: () {
+                        onTap: () async {
+                          await DefaultCacheManager().emptyCache();
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Кэш очищен')),
                           );

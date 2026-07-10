@@ -48,6 +48,7 @@ dependencies:
   provider: ^6.1.2
   url_launcher: ^6.2.5
   connectivity_plus: ^6.0.3
+  flutter_cache_manager: ^3.4.1
 
 dev_dependencies:
   flutter_test:
