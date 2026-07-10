@@ -119,7 +119,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> getMessages(String token, int groupId, {int limit = 50, int offset = 0}) async {
+  Future<Map<String, dynamic>> getMessages(String token, int groupId, int limit, int offset) async {
     final Uri url = Uri.parse('$baseUrl/groups/$groupId/messages?limit=$limit&offset=$offset');
     try {
       final response = await http.get(url, headers: {'Content-Type': 'application/json', 'auth-token': token});

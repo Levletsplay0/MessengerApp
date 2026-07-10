@@ -10,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:flutter_application_1/services/websocket_service.dart';
 
@@ -36,18 +37,25 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final ApiService _apiService = ApiService();
   final WebSocketService _wsService = WebSocketService();
+  final Connectivity _connectivity = Connectivity();
 
   List<dynamic> _messages = [];
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMoreMessages = true;
+  int _currentOffset = 0;
   String? _error;
   String? _token;
   int? _currentUserId;
   File? _selectedFile;
   bool _isSending = false;
   StreamSubscription? _wsSubscription;
+  StreamSubscription? _connectivitySubscription;
   String? _groupAvatarPath;
   String? _groupDescription;
   int _membersCount = 0;
+  bool _isConnectedToInternet = true;
+  bool _wasDisconnected = false;
 
   String _getFullUrl(String path) {
     if (path.startsWith('http://') || path.startsWith('https://')) {
@@ -60,6 +68,78 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _init();
+    _scrollController.addListener(_onScroll);
+    _initConnectivity();
+  }
+
+  Future<void> _initConnectivity() async {
+    // Проверяем начальное состояние
+    try {
+      final result = await _connectivity.checkConnectivity();
+      _updateConnectionStatus(result);
+    } catch (e) {
+      print('Ошибка проверки подключения: $e');
+      _updateConnectionStatus([ConnectivityResult.none]);
+    }
+
+    // Слушаем изменения подключения
+    _connectivitySubscription = _connectivity.onConnectivityChanged.listen((result) {
+      _updateConnectionStatus(result);
+    });
+  }
+
+  void _updateConnectionStatus(List<ConnectivityResult> result) {
+    final hasConnection = result.any((r) => 
+      r == ConnectivityResult.mobile || 
+      r == ConnectivityResult.wifi || 
+      r == ConnectivityResult.ethernet
+    );
+
+    if (mounted) {
+      setState(() {
+        _isConnectedToInternet = hasConnection;
+      });
+
+      if (!hasConnection) {
+        // Интернет пропал - отключаем WebSocket
+        print('Интернет пропал, отключаем WebSocket');
+        _wsSubscription?.cancel();
+        _wsService.disconnect();
+        _wasDisconnected = true;
+      } else if (_wasDisconnected) {
+        // Интернет восстановился - переподключаем WebSocket
+        print('Интернет восстановлен, переподключаем WebSocket');
+        _wasDisconnected = false;
+        _reconnectWebSocket();
+        
+        // Показываем уведомление о восстановлении
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.wifi, color: Colors.white),
+                  SizedBox(width: 8),
+                  Expanded(child: Text('Соединение восстановлено')),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels <= 0 && 
+        !_isLoadingMore && 
+        _hasMoreMessages &&
+        !_isLoading) {
+      _loadMoreMessages();
+    }
   }
 
   Future<void> _init() async {
@@ -86,11 +166,12 @@ class _ChatScreenState extends State<ChatScreen> {
     await _loadGroupDetails();
     await _loadMessages();
 
-    _wsService.connect(_baseUrl, widget.groupId, _token!);
-
-    _wsSubscription = _wsService.messageStream.listen((message) {
-      _handleWebSocketMessage(message);
-    });
+    if (_isConnectedToInternet) {
+      _wsService.connect(_baseUrl, widget.groupId, _token!);
+      _wsSubscription = _wsService.messageStream.listen((message) {
+        _handleWebSocketMessage(message);
+      });
+    }
   }
 
   Future<void> _loadGroupDetails() async {
@@ -110,7 +191,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _loadMessages() async {
     try {
-      final response = await _apiService.getMessages(_token!, widget.groupId);
+      final response = await _apiService.getMessages(_token!, widget.groupId, 50, 0);
       if (response['success'] == true && response['data'] != null) {
         setState(() {
           _messages = List.from(response['data']);
@@ -119,6 +200,8 @@ class _ChatScreenState extends State<ChatScreen> {
             final dateB = DateTime.parse(b['sent_at']);
             return dateA.compareTo(dateB);
           });
+          _currentOffset = _messages.length;
+          _hasMoreMessages = _messages.length >= 50;
           _isLoading = false;
         });
         
@@ -138,6 +221,64 @@ class _ChatScreenState extends State<ChatScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _loadMoreMessages() async {
+    if (_isLoadingMore || !_hasMoreMessages) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      final response = await _apiService.getMessages(_token!, widget.groupId, 50, _currentOffset);
+      
+      if (response['success'] == true && response['data'] != null) {
+        final newMessages = List.from(response['data']);
+        
+        if (newMessages.isEmpty) {
+          setState(() {
+            _hasMoreMessages = false;
+            _isLoadingMore = false;
+          });
+          return;
+        }
+
+        double? previousScrollOffset;
+        if (_scrollController.hasClients) {
+          previousScrollOffset = _scrollController.offset;
+        }
+
+        setState(() {
+          _messages.insertAll(0, newMessages);
+          _messages.sort((a, b) {
+            final dateA = DateTime.parse(a['sent_at']);
+            final dateB = DateTime.parse(b['sent_at']);
+            return dateA.compareTo(dateB);
+          });
+          _currentOffset += newMessages.length;
+          _hasMoreMessages = newMessages.length >= 50;
+          _isLoadingMore = false;
+        });
+
+        if (previousScrollOffset != null && _scrollController.hasClients) {
+          Future.delayed(const Duration(milliseconds: 50), () {
+            if (_scrollController.hasClients) {
+              _scrollController.jumpTo(previousScrollOffset!);
+            }
+          });
+        }
+      } else {
+        setState(() {
+          _isLoadingMore = false;
+        });
+      }
+    } catch (e) {
+      print('Ошибка загрузки дополнительных сообщений: $e');
+      setState(() {
+        _isLoadingMore = false;
+      });
     }
   }
 
@@ -209,6 +350,12 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage() async {
+    // Проверяем наличие интернета
+    if (!_isConnectedToInternet) {
+      _showSnackBar('Нет подключения к интернету');
+      return;
+    }
+
     final content = _messageController.text.trim();
     if (content.isEmpty && _selectedFile == null) return;
 
@@ -399,6 +546,12 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             onPressed: () {
+              if (!_isConnectedToInternet) {
+                Navigator.pop(context);
+                _showSnackBar('Нет подключения к интернету');
+                return;
+              }
+
               final newContent = controller.text.trim();
               if (newContent.isNotEmpty) {
                 _wsService.editMessage(message['id'], newContent);
@@ -449,6 +602,11 @@ class _ChatScreenState extends State<ChatScreen> {
     );
 
     if (confirm == true) {
+      if (!_isConnectedToInternet) {
+        _showSnackBar('Нет подключения к интернету');
+        return;
+      }
+      
       _wsService.deleteMessage(messageId);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -490,6 +648,11 @@ class _ChatScreenState extends State<ChatScreen> {
     );
 
     if (confirm == true && _token != null) {
+      if (!_isConnectedToInternet) {
+        _showSnackBar('Нет подключения к интернету');
+        return;
+      }
+
       try {
         _wsSubscription?.cancel();
         _wsService.disconnect();
@@ -539,7 +702,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _reconnectWebSocket() {
-    if (_token != null) {
+    if (_token != null && _isConnectedToInternet) {
       _wsService.connect(_baseUrl, widget.groupId, _token!);
       _wsSubscription = _wsService.messageStream.listen((message) {
         _handleWebSocketMessage(message);
@@ -549,6 +712,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    _connectivitySubscription?.cancel();
+    _scrollController.removeListener(_onScroll);
     _wsSubscription?.cancel();
     _wsService.disconnect();
     _messageController.dispose();
@@ -599,14 +764,22 @@ class _ChatScreenState extends State<ChatScreen> {
                 height: 10,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _wsService.isConnected ? Colors.greenAccent : Colors.redAccent,
+                  color: _wsService.isConnected && _isConnectedToInternet 
+                      ? Colors.greenAccent 
+                      : Colors.redAccent,
                 ),
               ),
             ),
           ),
           Text(
-            _wsService.isConnected ? "Соединено" : "Соединение...",
-            style: TextStyle(color: _wsService.isConnected ? Colors.greenAccent : Colors.redAccent),
+            _wsService.isConnected && _isConnectedToInternet 
+                ? "Соединено" 
+                : "Нет соединения",
+            style: TextStyle(
+              color: _wsService.isConnected && _isConnectedToInternet 
+                  ? Colors.greenAccent 
+                  : Colors.redAccent,
+            ),
           ),
 
           PopupMenuButton<String>(
@@ -634,6 +807,24 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
+          // Баннер отсутствия интернета
+          if (!_isConnectedToInternet)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              color: Colors.redAccent,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.wifi_off, color: Colors.white, size: 18),
+                  SizedBox(width: 8),
+                  Text(
+                    'Нет подключения к интернету',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -675,12 +866,25 @@ class _ChatScreenState extends State<ChatScreen> {
                           )
                         : ListView.builder(
                             controller: _scrollController,
+                            reverse: false,
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            itemCount: _messages.length,
+                            itemCount: _messages.length + (_hasMoreMessages ? 1 : 0),
                             itemBuilder: (context, index) {
-                              final message = _messages[index];
+                              if (index == 0 && _hasMoreMessages) {
+                                return _isLoadingMore
+                                    ? const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 16),
+                                        child: Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      )
+                                    : const SizedBox.shrink();
+                              }
+
+                              final messageIndex = _hasMoreMessages ? index - 1 : index;
+                              final message = _messages[messageIndex];
                               final isOwn = message['author_id'] == _currentUserId;
-                              final showDate = index == 0 || _shouldShowDateSeparator(index);
+                              final showDate = messageIndex == 0 || _shouldShowDateSeparator(messageIndex);
 
                               return Column(
                                 children: [
@@ -1288,18 +1492,22 @@ class _ChatScreenState extends State<ChatScreen> {
                     controller: _messageController,
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
-                      hintText: 'Сообщение...',
-                      hintStyle: TextStyle(color: Colors.grey[500], fontSize: 15),
+                      hintText: _isConnectedToInternet ? 'Сообщение...' : 'Нет интернета...',
+                      hintStyle: TextStyle(
+                        color: _isConnectedToInternet ? Colors.grey[500] : Colors.redAccent,
+                        fontSize: 15,
+                      ),
                       isDense: true,
                     ),
                     onSubmitted: (_) => _sendMessage(),
+                    enabled: _isConnectedToInternet,
                   ),
                 ),
 
                 const SizedBox(width: 6),
 
                 _buildCircleButton(
-                  onTap: _isSending ? null : () => _sendMessage(),
+                  onTap: _isSending || !_isConnectedToInternet ? null : () => _sendMessage(),
                   child: _isSending
                       ? const SizedBox(
                           width: 20,
@@ -1309,7 +1517,11 @@ class _ChatScreenState extends State<ChatScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.send_rounded, size: 20),
+                      : Icon(
+                          Icons.send_rounded, 
+                          size: 20,
+                          color: _isConnectedToInternet ? null : Colors.grey,
+                        ),
                 ),
               ],
             ),
@@ -1328,7 +1540,12 @@ class _ChatScreenState extends State<ChatScreen> {
       height: 40,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.blue.withValues(alpha: 0.3), width: 2.0),
+        border: Border.all(
+          color: onTap == null 
+              ? Colors.grey.withValues(alpha: 0.3) 
+              : Colors.blue.withValues(alpha: 0.3), 
+          width: 2.0,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
