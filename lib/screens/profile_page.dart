@@ -344,16 +344,17 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildAvatar() {
+    final bool hasAvatar = _avatarPath != null && _avatarPath!.isNotEmpty;
     return GestureDetector(
-      onTap: _showFullAvatar,
+      onTap: hasAvatar ? _showFullAvatar : null, 
       child: CircleAvatar(
         radius: 50,
-        backgroundImage: _avatarPath != null
+        backgroundImage: hasAvatar
             ? NetworkImage("$_baseURL$_avatarPath") as ImageProvider
             : null,
-        child: _avatarPath!.isEmpty
-            ? const Icon(Icons.group, size: 50, color: Colors.grey)
-            : null,
+        child: hasAvatar
+            ? null
+            : const Icon(Icons.group, size: 50, color: Colors.grey),
       ),
     );
   }
