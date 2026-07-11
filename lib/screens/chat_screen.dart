@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_1/screens/group_info_screen.dart';
 import 'package:flutter_application_1/screens/users_profile_screen.dart';
+import 'package:flutter_application_1/widgets/message_content.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -190,7 +191,6 @@ class _ChatScreenState extends State<ChatScreen> {
       if (response['success'] == true && response['data'] != null) {
         setState(() {
           _messages = List.from(response['data']);
-          // Сортируем в обратном порядке для reverse: true (новые сообщения в начале)
           _messages.sort((a, b) {
             final dateA = DateTime.parse(a['sent_at']);
             final dateB = DateTime.parse(b['sent_at']);
@@ -242,9 +242,7 @@ class _ChatScreenState extends State<ChatScreen> {
         }
 
         setState(() {
-          // Добавляем старые сообщения в конец списка (физически)
           _messages.addAll(newMessages);
-          // Сортируем в обратном порядке
           _messages.sort((a, b) {
             final dateA = DateTime.parse(a['sent_at']);
             final dateB = DateTime.parse(b['sent_at']);
@@ -255,8 +253,6 @@ class _ChatScreenState extends State<ChatScreen> {
           _isLoadingMore = false;
         });
 
-        // При reverse: true не нужно корректировать позицию прокрутки
-        // ListView автоматически сохраняет позицию
       } else {
         setState(() {
           _isLoadingMore = false;
@@ -279,7 +275,6 @@ class _ChatScreenState extends State<ChatScreen> {
         setState(() {
           final exists = _messages.any((m) => m['id'] == data['id']);
           if (!exists) {
-            // Добавляем новое сообщение в начало списка (индекс 0)
             _messages.insert(0, data);
           }
         });
@@ -304,7 +299,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      // При reverse: true "дно" это индекс 0
       _scrollController.jumpTo(0);
       
       Future.delayed(const Duration(milliseconds: 50), () {
@@ -321,7 +315,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _smartScrollToBottom() {
     if (_scrollController.hasClients) {
-      // При reverse: true проверяем, находится ли пользователь в начале (новые сообщения)
       final isAtBottom = _scrollController.offset <= 100;
       
       if (isAtBottom) {
@@ -335,7 +328,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage() async {
-    // Проверяем наличие интернета
     if (!_isConnectedToInternet) {
       _showSnackBar('Нет подключения к интернету');
       return;
@@ -358,7 +350,6 @@ class _ChatScreenState extends State<ChatScreen> {
           setState(() {
             final exists = _messages.any((m) => m['id'] == response['data']['id']);
             if (!exists) {
-              // Добавляем в начало списка
               _messages.insert(0, response['data']);
             }
           });
@@ -801,7 +792,6 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
-          // Баннер отсутствия интернета
           if (!_isConnectedToInternet)
             Container(
               width: double.infinity,
@@ -860,11 +850,10 @@ class _ChatScreenState extends State<ChatScreen> {
                           )
                         : ListView.builder(
                             controller: _scrollController,
-                            reverse: true, // КЛЮЧЕВОЕ ИЗМЕНЕНИЕ
+                            reverse: true,
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             itemCount: _messages.length + (_hasMoreMessages ? 1 : 0),
                             itemBuilder: (context, index) {
-                              // При reverse: true индикатор загрузки старых сообщений в конце
                               if (index == _messages.length && _hasMoreMessages) {
                                 return _isLoadingMore
                                     ? const Padding(
@@ -878,7 +867,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
                               final message = _messages[index];
                               final isOwn = message['author_id'] == _currentUserId;
-                              // При reverse: true проверяем следующий элемент (более старое сообщение)
                               final showDate = index == _messages.length - 1 || _shouldShowDateSeparator(index);
 
                               return Column(
@@ -897,7 +885,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   bool _shouldShowDateSeparator(int index) {
-    // При reverse: true проверяем следующий элемент (более старое сообщение)
     if (index >= _messages.length - 1) return false;
     final current = DateTime.parse(_messages[index]['sent_at']).toLocal();
     final next = DateTime.parse(_messages[index + 1]['sent_at']).toLocal();
@@ -907,7 +894,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildDateSeparator(String dateStr) {
-    final date = DateTime.parse(dateStr).toLocal(); // ИСПРАВЛЕНО: добавлен .toLocal()
+    final date = DateTime.parse(dateStr).toLocal();
     final now = DateTime.now();
     String text;
 
@@ -945,7 +932,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildMessageBubble(dynamic message, bool isOwn) {
     final content = message['content'] ?? '';
-    final sentAt = DateTime.parse(message['sent_at']).toLocal(); // ИСПРАВЛЕНО: добавлен .toLocal()
+    final sentAt = DateTime.parse(message['sent_at']).toLocal();
     final timeStr = DateFormat('HH:mm').format(sentAt);
     final isEdited = message['edited_at'] != null;
     final authorName = message['author_name'] ?? message['author_username'] ?? 'Пользователь';
@@ -1032,9 +1019,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     if (hasFile)
                       _buildFileAttachment(filePath, fileName!, fileSize),
                     if (content.isNotEmpty)
-                      SelectableText(
-                        content,
-                        style: const TextStyle(fontSize: 15, height: 1.35),
+                      MessageContent(
+                        content: content,
+                        isOwn: isOwn,
                       ),
                     const SizedBox(height: 4),
                     Row(
@@ -1487,6 +1474,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: TextField(
                     controller: _messageController,
                     textCapitalization: TextCapitalization.sentences,
+                    maxLines: 6,
+                    minLines: 1, 
+                    textInputAction: TextInputAction.newline,
                     decoration: InputDecoration(
                       hintText: _isConnectedToInternet ? 'Сообщение...' : 'Нет интернета...',
                       hintStyle: TextStyle(
@@ -1495,7 +1485,6 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       isDense: true,
                     ),
-                    onSubmitted: (_) => _sendMessage(),
                     enabled: _isConnectedToInternet,
                   ),
                 ),
