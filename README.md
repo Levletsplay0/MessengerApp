@@ -12,11 +12,10 @@
 
 Этот мессенджер создан **программистами для программистов**:
 
-### Тут мне нужна помощь!:
-- 🐙 **Глубокая интеграция с GitHub** — просмотр репозиториев, PR и Issues прямо в чате
-- 💻 **Подсветка синтаксиса кода** — нативное форматирование в сообщениях
-- 📞 **Голосовые и видеозвонки**
-- 💾 **Кэширование сообщений**
+- 🐙 **Глубокая интеграция с GitHub** — просмотр репозиториев, PR и Issues прямо в чате (В будущем)
+- 💻 **Подсветка синтаксиса кода** — нативное форматирование в сообщениях (Уже реализовано)
+- 📞 **Голосовые и видеозвонки** - в будущем
+- 💾 **Кэширование сообщений** - в будущем
 
 
 ## 📸 Скриншоты
@@ -28,6 +27,12 @@
 ![Chats List](screenshots/chats_list.png)
 
 ![Profile Screen](screenshots/profile_screen.png)
+
+![Settings Screen](screenshots/settings_screen.png)
+
+![Chat Screen](screenshots/chat_screen.png)
+
+![Group info Screen](screenshots/group_info_screen.png)
 
 ## 📋 Текущий функционал
 - 🔐 **Аутентификация**
@@ -53,15 +58,16 @@
   - Версия приложения
   - Платформа устройства
   - Кнопки с ссылками на репозитории
-  - Очистка кэша (пока заглушка)
+  - Очистка кэша
   - Выход из аккаунта
   
 - 🎨 **Интерфейс**
-  - Поддержка светлой и темной темы (системная)
+  - Material design
+  - Поддержка светлой и темной темы
   - Нижняя навигационная панель
   - Адаптивный дизайн
   - Индикаторы загрузки и обработки ошибок
-
+  - Подходит для любых устройств (desktop и mobile)
 
 ## 📦 Зависимости
 
@@ -77,36 +83,45 @@ dependencies:
   intl: ^0.20.2
   dio: ^5.4.0
   path_provider: ^2.1.1
-  permission_handler: ^11.1.0
+  permission_handler: ^12.0.0
   package_info_plus: ^8.0.0
   flutter_octicons: ^1.72.0
   provider: ^6.1.2
   url_launcher: ^6.2.5
+  connectivity_plus: ^6.0.3
+  flutter_cache_manager: ^3.4.1
+  flutter_markdown_plus: ^1.0.12
+  flutter_highlight: ^0.7.0
+  markdown: ^7.3.1
 ```
 
 ## 🏗 Структура проекта
 
 ```
 lib/
-├── main.dart                    # Точка входа, SplashScreen
+├── main.dart                      # Точка входа, SplashScreen
 ├── screens/
-│   ├── login_screen.dart        # Экран входа
-│   ├── register_screen.dart     # Экран регистрации
-│   ├── chats_screen.dart        # Главный экран с навигацией
-│   ├── chats_page.dart          # Список чатов/групп
-│   ├── profile_page.dart        # Профиль пользователя
-│   ├── settings_page.dart       # Настройки
+│   ├── login_screen.dart          # Экран входа
+│   ├── register_screen.dart       # Экран регистрации
+│   ├── chats_screen.dart          # Главный экран с навигацией
+│   ├── chats_page.dart            # Список чатов/групп
+│   ├── profile_page.dart          # Профиль пользователя
+│   ├── settings_page.dart         # Настройки
 │   ├── edit_description_page.dart # Редактирование описания
-│   ├── add_members_screen.dart  # Добавление пользователей в чат
-│   ├── create_group_page.dart   # Создание группы
-│   ├── group_info_screen.dart   # Информация о группе
+│   ├── add_members_screen.dart    # Добавление пользователей в чат
+│   ├── create_group_page.dart     # Создание группы
+│   ├── group_info_screen.dart     # Информация о группе
 │   ├── users_profile_screen.dart  # Профиль людей из чата
-│   └── chat_screen.dart         # Чат с сообщениями
+│   └── chat_screen.dart           # Чат с сообщениями
+├── providers/
+│   └── theme_provider.dart        # Сервис для получения из SharedPreference темы
 ├── services/
-│   ├── api_service.dart         # Сервис для работы с API
-│   └── websocket_service.dart   # Сервис для работы с websocket
-└── theme/
-    └── app_theme.dart           # Темы приложения
+│   ├── api_service.dart           # Сервис для работы с API
+│   └── websocket_service.dart     # Сервис для работы с websocket
+├── theme/
+│    └── app_theme.dart            # Тема приложения
+└── widgets/
+      └── message_content.dart     # Виджет для рендера markdown  
 ```
 
 ## 🚀 Установка и запуск
@@ -115,6 +130,7 @@ lib/
 - Flutter SDK (последняя стабильная версия)
 - Dart SDK
 - Android Studio / Xcode (для эмуляторов)
+- VS Code (по желанию)
 - Доступ к бэкенду: `http://45.132.255.102:8000`
 
 ### Шаги установки
@@ -144,8 +160,6 @@ flutter run -d <device_id>
 ```bash
 flutter devices
 ```
-
-> ⚠️ **Примечание**: Не все эндпоинты бэкенда реализованы во фронтенде. Работа над интеграцией продолжается.
 
 ## 🤝 Contributing
 
