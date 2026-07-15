@@ -4,10 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class UsersProfileScreen extends StatefulWidget {
   final int userId;
-  const UsersProfileScreen({
-    super.key,
-    required this.userId
-  });
+  const UsersProfileScreen({super.key, required this.userId});
 
   @override
   State<UsersProfileScreen> createState() => _UsersProfileScreen();
@@ -16,15 +13,13 @@ class UsersProfileScreen extends StatefulWidget {
 class _UsersProfileScreen extends State<UsersProfileScreen> {
   bool _isLoading = true;
   String? _error;
-  
+
   String _username = '';
   String _name = '';
   String _lastName = '';
   String? _avatarPath;
   String? _description;
   final String _baseURL = "http://45.132.255.102:8000/";
-
-
 
   @override
   void initState() {
@@ -51,7 +46,7 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
       final isSuccess = response["success"];
       if (isSuccess == true) {
         final data = response["data"];
-        
+
         if (data == null) {
           setState(() {
             _error = 'Данные профиля пусты';
@@ -59,7 +54,7 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
           });
           return;
         }
-        
+
         setState(() {
           _username = data["username"] ?? '';
           _name = data["name"] ?? '';
@@ -75,9 +70,6 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
           _isLoading = false;
         });
       }
-        
-      
-      
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -85,22 +77,16 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
       });
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_error != null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Профиль'),
-        ),
+        appBar: AppBar(title: const Text('Профиль')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -124,9 +110,7 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Профиль'),
-      ),
+      appBar: AppBar(title: const Text('Профиль')),
       body: ListView(
         children: [
           const SizedBox(height: 25),
@@ -136,7 +120,10 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
               const SizedBox(height: 15),
               Text(
                 "$_name $_lastName",
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 "Id: ${widget.userId}",
@@ -152,25 +139,26 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoRow(Icons.person_outline, _username, 'Имя пользователя'),
+                  _buildInfoRow(
+                    Icons.person_outline,
+                    _username,
+                    'Имя пользователя',
+                  ),
                   const Divider(),
                   _buildInfoRow(
                     Icons.description_outlined,
                     _description ?? 'Не указано',
                     'Описание',
-                  ),  
+                  ),
                 ],
               ),
             ),
           ),
-          
         ],
       ),
-      
     );
   }
 
-  
   Widget _buildAvatarSection() {
     final bool hasAvatar = _avatarPath != null && _avatarPath!.isNotEmpty;
 
@@ -188,11 +176,7 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
     );
   }
 
-  Widget _buildInfoRow(
-    IconData icon, 
-    String value, 
-    String label, 
-  ) {
+  Widget _buildInfoRow(IconData icon, String value, String label) {
     return Row(
       children: [
         Icon(icon, color: Colors.blue, size: 24),
@@ -210,20 +194,16 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
               ),
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ],
           ),
         ),
-        
       ],
     );
   }
 
-  void _showFullAvatar() {    
+  void _showFullAvatar() {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -238,7 +218,11 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
                     "$_baseURL$_avatarPath",
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.broken_image, color: Colors.white, size: 50);
+                      return const Icon(
+                        Icons.broken_image,
+                        color: Colors.white,
+                        size: 50,
+                      );
                     },
                   ),
                 ),
@@ -258,5 +242,4 @@ class _UsersProfileScreen extends State<UsersProfileScreen> {
       ),
     );
   }
-  
 }

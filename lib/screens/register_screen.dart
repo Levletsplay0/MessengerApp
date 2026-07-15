@@ -15,11 +15,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
 
-  
   @override
   void dispose() {
     _emailController.dispose();
@@ -39,8 +39,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     String name = _nameController.text;
     String lastName = _lastNameController.text;
 
-
-    if (email.isEmpty || username.isEmpty || password.isEmpty || confirmPassword.isEmpty || name.isEmpty || lastName.isEmpty) {
+    if (email.isEmpty ||
+        username.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty ||
+        name.isEmpty ||
+        lastName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Заполните все поля'),
@@ -50,7 +54,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       return;
     }
-    if(password != confirmPassword){
+    if (password != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Пароли не совпали'),
@@ -63,7 +67,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final api = ApiService();
-      final response = await api.register(username, password, email, name, lastName);
+      final response = await api.register(
+        username,
+        password,
+        email,
+        name,
+        lastName,
+      );
       bool isSuccess = response["success"];
       String message = response["message"];
       if (isSuccess == true) {
@@ -74,8 +84,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             duration: Duration(seconds: 1),
           ),
         );
-      }
-      else {
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Ошибка: $message'),
@@ -84,8 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         );
       }
-    }
-    catch(e) {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Ошибка: $e'),
@@ -99,9 +107,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Регистрация'),
-      ),
+      appBar: AppBar(title: const Text('Регистрация')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -112,20 +118,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 5),
               Text(
                 "Регистрация",
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold
-                ),
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 25),
-              
+
               Card(
                 color: Colors.transparent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    width: 1.5,
-                  ),
+                  side: BorderSide(width: 1.5),
                 ),
                 margin: const EdgeInsets.symmetric(vertical: 8),
                 child: Padding(
@@ -175,8 +176,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           prefixIcon: const Icon(Icons.password),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _isPasswordVisible 
-                                  ? Icons.visibility_off 
+                              _isPasswordVisible
+                                  ? Icons.visibility_off
                                   : Icons.visibility,
                             ),
                             onPressed: () {
@@ -202,14 +203,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ),
-              
+
               Card(
                 color: Colors.transparent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    width: 1.5,
-                  ),
+                  side: BorderSide(width: 1.5),
                 ),
                 margin: const EdgeInsets.symmetric(vertical: 8),
                 child: Padding(
@@ -251,9 +250,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
@@ -264,9 +263,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: const Text('Зарегистрироваться'),
                 ),
               ),
-              
+
               const SizedBox(height: 15),
-              
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -279,7 +278,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       HapticFeedback.mediumImpact();
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
                       );
                     },
                     child: const Text(

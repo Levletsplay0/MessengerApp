@@ -4,11 +4,8 @@ import '../services/api_service.dart';
 
 class EditDescriptionPage extends StatefulWidget {
   final String currentDescription;
-  
-  const EditDescriptionPage({
-    super.key,
-    required this.currentDescription,
-  });
+
+  const EditDescriptionPage({super.key, required this.currentDescription});
 
   @override
   State<EditDescriptionPage> createState() => _EditDescriptionPageState();
@@ -63,7 +60,10 @@ class _EditDescriptionPageState extends State<EditDescriptionPage> {
       }
 
       final api = ApiService();
-      final response = await api.updateDescription(token, _controller.text.trim());
+      final response = await api.updateDescription(
+        token,
+        _controller.text.trim(),
+      );
 
       if (!mounted) return;
 
@@ -92,10 +92,7 @@ class _EditDescriptionPageState extends State<EditDescriptionPage> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Ошибка: $e"),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text("Ошибка: $e"), backgroundColor: Colors.red),
       );
     }
   }
@@ -121,10 +118,7 @@ class _EditDescriptionPageState extends State<EditDescriptionPage> {
           children: [
             const Text(
               'Введите новое описание профиля:',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -140,10 +134,7 @@ class _EditDescriptionPageState extends State<EditDescriptionPage> {
             const SizedBox(height: 8),
             Text(
               '${_controller.text.length}/100 символов',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
             ),
           ],
         ),
@@ -151,9 +142,7 @@ class _EditDescriptionPageState extends State<EditDescriptionPage> {
       bottomNavigationBar: _isLoading
           ? const Padding(
               padding: EdgeInsets.all(16.0),
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: Center(child: CircularProgressIndicator()),
             )
           : null,
     );

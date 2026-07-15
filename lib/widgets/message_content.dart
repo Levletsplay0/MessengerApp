@@ -12,11 +12,7 @@ class MessageContent extends StatelessWidget {
   final String content;
   final bool isOwn;
 
-  const MessageContent({
-    super.key,
-    required this.content,
-    required this.isOwn,
-  });
+  const MessageContent({super.key, required this.content, required this.isOwn});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +21,7 @@ class MessageContent extends StatelessWidget {
     return MarkdownBody(
       data: content,
       selectable: true,
-      
+
       styleSheet: MarkdownStyleSheet(
         tableColumnWidth: FixedColumnWidth(150.0),
         p: const TextStyle(fontSize: 15, height: 1.35),
@@ -49,9 +45,7 @@ class MessageContent extends StatelessWidget {
           ),
         ),
       ),
-      builders: {
-        'code': CodeElementBuilder(isDark: isDark),
-      },
+      builders: {'code': CodeElementBuilder(isDark: isDark)},
     );
   }
 }
@@ -246,11 +240,12 @@ class _HorizontalCodeScrollState extends State<HorizontalCodeScroll> {
               builder: (context, constraints) {
                 final trackWidth = constraints.maxWidth;
                 const minThumb = 24.0;
-                final thumbWidth =
-                    (_thumbFraction * trackWidth).clamp(minThumb, trackWidth);
+                final thumbWidth = (_thumbFraction * trackWidth).clamp(
+                  minThumb,
+                  trackWidth,
+                );
                 final maxLeft = trackWidth - thumbWidth;
-                final thumbLeft =
-                    (_thumbOffset * maxLeft).clamp(0.0, maxLeft);
+                final thumbLeft = (_thumbOffset * maxLeft).clamp(0.0, maxLeft);
 
                 return SizedBox(
                   height: 4,

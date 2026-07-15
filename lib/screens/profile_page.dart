@@ -16,7 +16,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   bool _isLoading = true;
   String? _error;
-  
+
   int? _userId;
   String _username = '';
   String _email = '';
@@ -25,8 +25,6 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _avatarPath;
   String? _description;
   final String _baseURL = "http://45.132.255.102:8000/";
-
-
 
   @override
   void initState() {
@@ -54,7 +52,7 @@ class _ProfilePageState extends State<ProfilePage> {
       final isSuccess = response["success"];
       if (isSuccess == true) {
         final data = response["data"];
-        
+
         if (data == null) {
           if (!mounted) return;
           setState(() {
@@ -82,9 +80,6 @@ class _ProfilePageState extends State<ProfilePage> {
           _isLoading = false;
         });
       }
-        
-      
-      
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -95,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _deleteAvatar() async {
-    try{
+    try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
       if (!mounted) return;
@@ -105,30 +100,29 @@ class _ProfilePageState extends State<ProfilePage> {
 
       final api = ApiService();
       final response = await api.deleteAvatar(token!);
-      
 
       final isSuccess = response["success"];
       if (isSuccess == true) {
         final message = response["message"];
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("$message"),
-              duration: Duration(seconds: 2),
-              backgroundColor: Colors.greenAccent,
-            ),
+          SnackBar(
+            content: Text("$message"),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.greenAccent,
+          ),
         );
         _loadProfile();
       } else {
-          final message = response["message"] ?? 'Неизвестная ошибка';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("$message"),
-              duration: Duration(seconds: 2),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-    }catch (e){
+        final message = response["message"] ?? 'Неизвестная ошибка';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("$message"),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("$e"),
@@ -137,7 +131,6 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       );
     }
-    
   }
 
   Future<void> _pickAndUploadImage() async {
@@ -150,12 +143,16 @@ class _ProfilePageState extends State<ProfilePage> {
       if (result == null || result.files.isEmpty) return;
 
       final platformFile = result.files.first;
-      
+
       String? filePath = platformFile.path;
-      
+
       if (filePath == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('На веб-платформах требуется дополнительная обработка')),
+          const SnackBar(
+            content: Text(
+              'На веб-платформах требуется дополнительная обработка',
+            ),
+          ),
         );
         return;
       }
@@ -180,7 +177,7 @@ class _ProfilePageState extends State<ProfilePage> {
       final response = await api.changeAvatar(token, File(filePath));
 
       final isSuccess = response["success"];
-      
+
       if (isSuccess == true) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -219,13 +216,10 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_error != null) {
@@ -325,7 +319,11 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildInfoRow(Icons.person_outline, _username, 'Имя пользователя'),
+                _buildInfoRow(
+                  Icons.person_outline,
+                  _username,
+                  'Имя пользователя',
+                ),
                 const Divider(),
                 _buildInfoRow(Icons.email_outlined, _email, 'Почта'),
                 const Divider(),
@@ -333,8 +331,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   Icons.description_outlined,
                   _description ?? 'Не указано',
                   'Описание',
-                  onEdit: _navigateToEditDescription
-                ),  
+                  onEdit: _navigateToEditDescription,
+                ),
               ],
             ),
           ),
@@ -346,7 +344,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildAvatar() {
     final bool hasAvatar = _avatarPath != null && _avatarPath!.isNotEmpty;
     return GestureDetector(
-      onTap: hasAvatar ? _showFullAvatar : null, 
+      onTap: hasAvatar ? _showFullAvatar : null,
       child: CircleAvatar(
         radius: 50,
         backgroundImage: hasAvatar
@@ -360,11 +358,11 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildInfoRow(
-    IconData icon, 
-    String value, 
-    String label, 
-    {VoidCallback? onEdit}
-  ) {
+    IconData icon,
+    String value,
+    String label, {
+    VoidCallback? onEdit,
+  }) {
     return Row(
       children: [
         Icon(icon, color: Colors.blue, size: 24),
@@ -382,10 +380,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ],
           ),
@@ -404,9 +399,8 @@ class _ProfilePageState extends State<ProfilePage> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditDescriptionPage(
-          currentDescription: _description ?? '',
-        ),
+        builder: (context) =>
+            EditDescriptionPage(currentDescription: _description ?? ''),
       ),
     );
 
@@ -415,7 +409,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _showFullAvatar() {    
+  void _showFullAvatar() {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -430,7 +424,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     "$_baseURL$_avatarPath",
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.broken_image, color: Colors.white, size: 50);
+                      return const Icon(
+                        Icons.broken_image,
+                        color: Colors.white,
+                        size: 50,
+                      );
                     },
                   ),
                 ),
@@ -450,5 +448,4 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-
 }

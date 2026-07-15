@@ -73,9 +73,7 @@ class _ChatsPageState extends State<ChatsPage> {
   Future<void> _onCreateGroupPressed() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const CreateGroupPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const CreateGroupPage()),
     );
 
     if (result == true) {
@@ -97,80 +95,90 @@ class _ChatsPageState extends State<ChatsPage> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _error != null
-                ? Center(
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Ошибка: $_error'),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _isLoading = true;
+                          _error = null;
+                        });
+                        _loadChats();
+                      },
+                      child: const Text('Повторить'),
+                    ),
+                  ],
+                ),
+              )
+            : _chats.isEmpty
+            ? ListView(
+                children: const [
+                  SizedBox(height: 200),
+                  Center(
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Ошибка: $_error'),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _isLoading = true;
-                              _error = null;
-                            });
-                            _loadChats();
-                          },
-                          child: const Text('Повторить'),
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 80,
+                          color: Colors.grey,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Нет чатов',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
                         ),
                       ],
                     ),
-                  )
-                : _chats.isEmpty
-                    ? ListView(
-                        children: const [
-                          SizedBox(height: 200),
-                          Center(
-                            child: Column(
-                              children: [
-                                Icon(Icons.chat_bubble_outline, size: 80, color: Colors.grey),
-                                SizedBox(height: 16),
-                                Text('Нет чатов', style: TextStyle(fontSize: 18, color: Colors.grey)),
-                              ],
-                            ),
+                  ),
+                ],
+              )
+            : ListView.builder(
+                itemCount: _chats.length,
+                itemBuilder: (context, index) {
+                  final chat = _chats[index];
+                  final name = chat['name'] ?? 'Без названия';
+                  final description = chat['description'] ?? 'Без описания';
+                  final avatarPath = chat['avatar_path'];
+                  final groupId = chat['id'];
+
+                  return ListTile(
+                    leading: _buildAvatar(name, avatarPath),
+                    title: Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      description,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: Colors.grey,
+                    ),
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatScreen(
+                            groupId: groupId,
+                            groupName: name,
+                            groupAvatar: avatarPath,
                           ),
-                        ],
-                      )
-                    : ListView.builder(
-                        itemCount: _chats.length,
-                        itemBuilder: (context, index) {
-                          final chat = _chats[index];
-                          final name = chat['name'] ?? 'Без названия';
-                          final description = chat['description'] ?? 'Без описания';
-                          final avatarPath = chat['avatar_path'];
-                          final groupId = chat['id'];
+                        ),
+                      );
 
-                          return ListTile(
-                            leading: _buildAvatar(name, avatarPath),
-                            title: Text(
-                              name,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(
-                              description,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                            onTap: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChatScreen(
-                                    groupId: groupId,
-                                    groupName: name,
-                                    groupAvatar: avatarPath,
-                                  ),
-                                ),
-                              );
-
-                              if (result == true) {
-                                _loadChats();
-                              }
-                            },
-                          );
-                        },
-                      ),
+                      if (result == true) {
+                        _loadChats();
+                      }
+                    },
+                  );
+                },
+              ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _onCreateGroupPressed,

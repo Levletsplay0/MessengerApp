@@ -4,7 +4,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WebSocketService {
   WebSocketChannel? _channel;
-  StreamController<Map<String, dynamic>> _messageController = StreamController.broadcast();
+  final StreamController<Map<String, dynamic>> _messageController =
+      StreamController.broadcast();
   bool _isConnected = false;
   int _reconnectAttempts = 0;
   final int _maxReconnectAttempts = 5;
@@ -15,7 +16,8 @@ class WebSocketService {
   bool get isConnected => _isConnected;
 
   void connect(String baseUrl, int groupId, String token) {
-    _wsUrl = 'ws://${baseUrl.replaceFirst('http://', '').replaceFirst('https://', '')}/ws/$groupId?token=$token';
+    _wsUrl =
+        'ws://${baseUrl.replaceFirst('http://', '').replaceFirst('https://', '')}/ws/$groupId?token=$token';
     _connect();
   }
 
@@ -63,7 +65,9 @@ class WebSocketService {
 
     _reconnectAttempts++;
     final delay = Duration(seconds: _reconnectAttempts * 2);
-    print("Попытка переподключения $_reconnectAttempts через ${delay.inSeconds}с...");
+    print(
+      "Попытка переподключения $_reconnectAttempts через ${delay.inSeconds}с...",
+    );
 
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(delay, () {
@@ -77,10 +81,7 @@ class WebSocketService {
       return;
     }
 
-    final message = jsonEncode({
-      "action": "send_message",
-      "content": content,
-    });
+    final message = jsonEncode({"action": "send_message", "content": content});
 
     _channel!.sink.add(message);
   }

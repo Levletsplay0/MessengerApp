@@ -16,9 +16,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Мессенджер'),
-      ),
+      appBar: AppBar(title: const Text('Мессенджер')),
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {
           setState(() {

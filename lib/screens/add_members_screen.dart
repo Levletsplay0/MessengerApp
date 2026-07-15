@@ -98,9 +98,9 @@ class _AddMembersScreenState extends State<AddMembersScreen> {
         setState(() {
           _isAdding = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Не авторизован')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Не авторизован')));
         return;
       }
 
@@ -125,7 +125,10 @@ class _AddMembersScreenState extends State<AddMembersScreen> {
           ),
         );
         if (mounted) {
-          Navigator.pop(context, true); // Возвращаем true, чтобы обновить список
+          Navigator.pop(
+            context,
+            true,
+          ); // Возвращаем true, чтобы обновить список
         }
       } else {
         final message = response["message"] ?? 'Ошибка добавления';
@@ -161,9 +164,7 @@ class _AddMembersScreenState extends State<AddMembersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Добавить в "${widget.groupName}"'),
-      ),
+      appBar: AppBar(title: Text('Добавить в "${widget.groupName}"')),
       body: Column(
         children: [
           Padding(
@@ -192,9 +193,9 @@ class _AddMembersScreenState extends State<AddMembersScreen> {
               onChanged: (value) {
                 // Отменяем предыдущий таймер
                 _debounce?.cancel();
-                
+
                 final query = value.trim();
-                
+
                 if (query.isEmpty) {
                   setState(() {
                     _foundUsers = [];
@@ -202,7 +203,7 @@ class _AddMembersScreenState extends State<AddMembersScreen> {
                   });
                   return;
                 }
-                
+
                 // Запускаем новый таймер на 500мс
                 _debounce = Timer(const Duration(milliseconds: 500), () {
                   _searchUsers();
@@ -214,68 +215,78 @@ class _AddMembersScreenState extends State<AddMembersScreen> {
             child: _isSearching
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('Ошибка: $_error'),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _searchUsers,
-                              child: const Text('Повторить'),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Ошибка: $_error'),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _searchUsers,
+                          child: const Text('Повторить'),
                         ),
-                      )
-                    : _foundUsers.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'Введите ник для поиска',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: _foundUsers.length,
-                            itemBuilder: (context, index) {
-                              final user = _foundUsers[index];
-                              final userId = user['id'];
-                              final username = user['username'] ?? 'Без ника';
-                              final name = user['name'] ?? '';
-                              final lastName = user['last_name'] ?? '';
-                              final avatarPath = user['avatar_path'];
-                              final fullName = '$name $lastName'.trim();
+                      ],
+                    ),
+                  )
+                : _foundUsers.isEmpty
+                ? const Center(
+                    child: Text(
+                      'Введите ник для поиска',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: _foundUsers.length,
+                    itemBuilder: (context, index) {
+                      final user = _foundUsers[index];
+                      final userId = user['id'];
+                      final username = user['username'] ?? 'Без ника';
+                      final name = user['name'] ?? '';
+                      final lastName = user['last_name'] ?? '';
+                      final avatarPath = user['avatar_path'];
+                      final fullName = '$name $lastName'.trim();
 
-                              return CheckboxListTile(
-                                value: _selectedUserIds.contains(userId),
-                                onChanged: (bool? selected) {
-                                  setState(() {
-                                    if (selected == true) {
-                                      _selectedUserIds.add(userId);
-                                    } else {
-                                      _selectedUserIds.remove(userId);
-                                    }
-                                  });
-                                },
-                                title: Text(
-                                  fullName.isNotEmpty ? fullName : username,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Text('$username'),
-                                secondary: _buildAvatar(fullName.isNotEmpty ? fullName : username, avatarPath),
-                                controlAffinity: ListTileControlAffinity.trailing,
-                              );
-                            },
-                          ),
+                      return CheckboxListTile(
+                        value: _selectedUserIds.contains(userId),
+                        onChanged: (bool? selected) {
+                          setState(() {
+                            if (selected == true) {
+                              _selectedUserIds.add(userId);
+                            } else {
+                              _selectedUserIds.remove(userId);
+                            }
+                          });
+                        },
+                        title: Text(
+                          fullName.isNotEmpty ? fullName : username,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text('$username'),
+                        secondary: _buildAvatar(
+                          fullName.isNotEmpty ? fullName : username,
+                          avatarPath,
+                        ),
+                        controlAffinity: ListTileControlAffinity.trailing,
+                      );
+                    },
+                  ),
           ),
         ],
       ),
       bottomNavigationBar: _isAdding
-          ? const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: CircularProgressIndicator(),
+              ),
+            )
           : SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ElevatedButton(
-                  onPressed: _selectedUserIds.isEmpty ? null : _addSelectedMembers,
+                  onPressed: _selectedUserIds.isEmpty
+                      ? null
+                      : _addSelectedMembers,
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
@@ -306,8 +317,14 @@ class _AddMembersScreenState extends State<AddMembersScreen> {
 
     final firstLetter = name.isNotEmpty ? name[0].toUpperCase() : '?';
     final colors = [
-      Colors.red, Colors.blue, Colors.green, Colors.purple,
-      Colors.orange, Colors.teal, Colors.pink, Colors.indigo,
+      Colors.red,
+      Colors.blue,
+      Colors.green,
+      Colors.purple,
+      Colors.orange,
+      Colors.teal,
+      Colors.pink,
+      Colors.indigo,
     ];
     final index = name.length % colors.length;
     final color = colors[index];

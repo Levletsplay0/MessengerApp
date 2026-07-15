@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/add_members_screen.dart';
-import 'package:flutter_application_1/screens/chats_page.dart';
 import 'package:flutter_application_1/screens/chats_screen.dart';
 import 'package:flutter_application_1/screens/users_profile_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
@@ -30,7 +29,6 @@ class _GroupInfoPage extends State<GroupInfoPage> {
   final String _baseURL = "http://45.132.255.102:8000/";
   final ApiService _api = ApiService();
 
-
   @override
   void initState() {
     super.initState();
@@ -43,12 +41,8 @@ class _GroupInfoPage extends State<GroupInfoPage> {
       setState(() => _isLoading = false);
       return;
     }
-    await Future.wait([
-      _getMembers(widget.groupId),
-      _getGroup(widget.groupId),
-    ]);
+    await Future.wait([_getMembers(widget.groupId), _getGroup(widget.groupId)]);
   }
-
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -81,7 +75,6 @@ class _GroupInfoPage extends State<GroupInfoPage> {
     if (!mounted) return;
     setState(() => _isLoading = value);
   }
-
 
   Future<void> _getMembers(int groupId) async {
     try {
@@ -129,7 +122,9 @@ class _GroupInfoPage extends State<GroupInfoPage> {
 
   Future<void> _kickMemberApi(int memberId) async {
     try {
-      final response = await _api.kickUserFromGroup(_token!, widget.groupId, [memberId]);
+      final response = await _api.kickUserFromGroup(_token!, widget.groupId, [
+        memberId,
+      ]);
       final bool isSuccess = response["success"] == true;
       final String message = response["message"] ?? "Ошибка";
 
@@ -149,7 +144,11 @@ class _GroupInfoPage extends State<GroupInfoPage> {
 
   Future<bool> _updateGroupNameApi(String newName) async {
     try {
-      final response = await _api.updateGroupName(_token!, widget.groupId, newName);
+      final response = await _api.updateGroupName(
+        _token!,
+        widget.groupId,
+        newName,
+      );
       final bool isSuccess = response["success"] == true;
       final String message = response["message"] ?? "Ошибка";
 
@@ -172,7 +171,11 @@ class _GroupInfoPage extends State<GroupInfoPage> {
 
   Future<bool> _updateGroupDescriptionApi(String newDescription) async {
     try {
-      final response = await _api.updateGroupDescription(_token!, widget.groupId, newDescription);
+      final response = await _api.updateGroupDescription(
+        _token!,
+        widget.groupId,
+        newDescription,
+      );
       final bool isSuccess = response["success"] == true;
       final String message = response["message"] ?? "Ошибка";
 
@@ -196,7 +199,11 @@ class _GroupInfoPage extends State<GroupInfoPage> {
   Future<void> _uploadAvatarApi(String filePath) async {
     try {
       _setLoading(true);
-      final response = await _api.changeGroupAvatar(_token!, widget.groupId, File(filePath));
+      final response = await _api.changeGroupAvatar(
+        _token!,
+        widget.groupId,
+        File(filePath),
+      );
       final bool isSuccess = response["success"] == true;
       final String message = response["message"] ?? "Ошибка";
 
@@ -239,7 +246,6 @@ class _GroupInfoPage extends State<GroupInfoPage> {
     }
   }
 
-
   Future<bool?> _showConfirmDialog({
     required String title,
     required String content,
@@ -267,7 +273,9 @@ class _GroupInfoPage extends State<GroupInfoPage> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: confirmColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(confirmText),
@@ -316,7 +324,9 @@ class _GroupInfoPage extends State<GroupInfoPage> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: () {
               final text = controller.text.trim();
@@ -333,11 +343,11 @@ class _GroupInfoPage extends State<GroupInfoPage> {
     );
   }
 
-
   Future<void> _kickMember(int memberId, String memberName) async {
     final confirmed = await _showConfirmDialog(
       title: 'Исключить?',
-      content: 'Вы уверены, что хотите исключить "$memberName" из группы?\n\nЭто действие нельзя будет отменить.',
+      content:
+          'Вы уверены, что хотите исключить "$memberName" из группы?\n\nЭто действие нельзя будет отменить.',
       confirmText: 'Исключить',
     );
     if (confirmed == true) {
@@ -401,7 +411,8 @@ class _GroupInfoPage extends State<GroupInfoPage> {
   Future<void> _confirmDeleteAvatar() async {
     final confirmed = await _showConfirmDialog(
       title: 'Удалить аватарку?',
-      content: 'Вы уверены, что хотите удалить аватарку группы?\n\nЭто действие нельзя будет отменить.',
+      content:
+          'Вы уверены, что хотите удалить аватарку группы?\n\nЭто действие нельзя будет отменить.',
       confirmText: 'Удалить',
     );
     if (confirmed == true) {
@@ -453,10 +464,8 @@ class _GroupInfoPage extends State<GroupInfoPage> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddMembersScreen(
-          groupId: widget.groupId,
-          groupName: _groupName,
-        ),
+        builder: (context) =>
+            AddMembersScreen(groupId: widget.groupId, groupName: _groupName),
       ),
     );
     if (result == true && mounted) {
@@ -476,7 +485,9 @@ class _GroupInfoPage extends State<GroupInfoPage> {
             Text('Выйти из группы?'),
           ],
         ),
-        content: const Text('Вы покидаете эту группу. Это действие нельзя отменить.'),
+        content: const Text(
+          'Вы покидаете эту группу. Это действие нельзя отменить.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -485,7 +496,9 @@ class _GroupInfoPage extends State<GroupInfoPage> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Выйти'),
@@ -495,12 +508,12 @@ class _GroupInfoPage extends State<GroupInfoPage> {
     );
 
     if (confirm == true && _token != null) {
-      try {        
-        setState(() => _isLoading = true); 
+      try {
+        setState(() => _isLoading = true);
 
         final ApiService apiService = ApiService();
         final response = await apiService.deleteGroup(_token!, widget.groupId);
-        
+
         if (response['success'] == true) {
           String message = response["message"];
           if (mounted) {
@@ -521,10 +534,12 @@ class _GroupInfoPage extends State<GroupInfoPage> {
             setState(() => _isLoading = false);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(response['message'] ?? 'Ошибка при выходе из группы'),
+                content: Text(
+                  response['message'] ?? 'Ошибка при выходе из группы',
+                ),
                 behavior: SnackBarBehavior.floating,
               ),
-            );         
+            );
           }
         }
       } catch (e) {
@@ -541,7 +556,6 @@ class _GroupInfoPage extends State<GroupInfoPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -549,11 +563,11 @@ class _GroupInfoPage extends State<GroupInfoPage> {
         title: const Text('О группе'),
         actions: [
           IconButton(
-            onPressed: _deleteGroup, 
+            onPressed: _deleteGroup,
             icon: Icon(Icons.delete_outline_rounded),
             color: Colors.red,
             tooltip: "Удалить группу",
-          )
+          ),
         ],
       ),
       body: _isLoading ? _buildLoadingView() : _buildContentView(),
@@ -677,7 +691,10 @@ class _GroupInfoPage extends State<GroupInfoPage> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blue.withValues(alpha: 0.3), width: 1.5),
+        border: Border.all(
+          color: Colors.blue.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
       ),
       padding: const EdgeInsets.all(8),
       child: Column(
@@ -732,7 +749,9 @@ class _GroupInfoPage extends State<GroupInfoPage> {
                 child: OutlinedButton(
                   onPressed: _openAddMembers,
                   style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   child: const Text("Добавить участников"),
                 ),
@@ -775,8 +794,10 @@ class _GroupInfoPage extends State<GroupInfoPage> {
           avatarPath: avatarPath,
           onTap: () {
             Navigator.push(
-              context, 
-              MaterialPageRoute(builder: (context) => UsersProfileScreen(userId: id))
+              context,
+              MaterialPageRoute(
+                builder: (context) => UsersProfileScreen(userId: id),
+              ),
             );
           },
           onEdit: id != null ? () => _kickMember(id, username) : null,
@@ -787,7 +808,6 @@ class _GroupInfoPage extends State<GroupInfoPage> {
     }
     return items;
   }
-
 
   Widget _buildInfoRow(
     IconData icon,
@@ -807,7 +827,11 @@ class _GroupInfoPage extends State<GroupInfoPage> {
             behavior: HitTestBehavior.opaque,
             child: Row(
               children: [
-                _buildAvatarWithLoader(avatarPath: avatarPath, icon: icon, radius: 18),
+                _buildAvatarWithLoader(
+                  avatarPath: avatarPath,
+                  icon: icon,
+                  radius: 18,
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -819,14 +843,23 @@ class _GroupInfoPage extends State<GroupInfoPage> {
                             child: Text(
                               value,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                           if (roleLabel != null && roleLabel.isNotEmpty)
-                            _buildRoleBadge(label: roleLabel, color: roleColor ?? Colors.blue),
+                            _buildRoleBadge(
+                              label: roleLabel,
+                              color: roleColor ?? Colors.blue,
+                            ),
                         ],
                       ),
-                      Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                      Text(
+                        label,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
                     ],
                   ),
                 ),
@@ -896,7 +929,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
                 child: CircularProgressIndicator(
                   value: loadingProgress.expectedTotalBytes != null
                       ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
+                            loadingProgress.expectedTotalBytes!
                       : null,
                   strokeWidth: 2,
                   color: Colors.grey[600],
@@ -912,7 +945,6 @@ class _GroupInfoPage extends State<GroupInfoPage> {
     );
   }
 
-
   String _formatDate(String? dateString) {
     if (dateString == null || dateString.isEmpty || dateString == "0") {
       return "Неизвестно";
@@ -922,8 +954,18 @@ class _GroupInfoPage extends State<GroupInfoPage> {
       if (dateTime.isUtc) dateTime = dateTime.toLocal();
 
       const months = [
-        'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-        'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+        'января',
+        'февраля',
+        'марта',
+        'апреля',
+        'мая',
+        'июня',
+        'июля',
+        'августа',
+        'сентября',
+        'октября',
+        'ноября',
+        'декабря',
       ];
 
       final day = dateTime.day.toString();
@@ -940,7 +982,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
 
   void _showFullAvatar() {
     if (_avatarPath.isEmpty) return;
-    
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -955,7 +997,11 @@ class _GroupInfoPage extends State<GroupInfoPage> {
                     "$_baseURL$_avatarPath",
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.broken_image, color: Colors.white, size: 50);
+                      return const Icon(
+                        Icons.broken_image,
+                        color: Colors.white,
+                        size: 50,
+                      );
                     },
                   ),
                 ),

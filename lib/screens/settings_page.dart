@@ -27,7 +27,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _loadAppInfo() async {
     final packageInfo = await PackageInfo.fromPlatform();
-    
+
     String platform;
     if (Platform.isAndroid) {
       platform = 'Android';
@@ -78,9 +78,9 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
-    
+
     if (!mounted) return;
-    
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -112,7 +112,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               _buildSectionTitle('Внешний вид'),
               const SizedBox(height: 12),
               Card(
@@ -127,7 +127,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       SwitchListTile(
                         title: const Text('Светлая тема'),
                         subtitle: Text(
-                          isLight ? 'Включена светлая тема' : 'Включена темная тема',
+                          isLight
+                              ? 'Включена светлая тема'
+                              : 'Включена темная тема',
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(context).textTheme.bodySmall?.color,
@@ -146,9 +148,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               _buildSectionTitle('О приложении'),
               const SizedBox(height: 12),
               Card(
@@ -170,7 +172,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         subtitle: Text(_appVersion),
                       ),
                       const Divider(),
-                      
+
                       ListTile(
                         leading: Icon(
                           Icons.devices,
@@ -180,7 +182,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         subtitle: Text(_platform),
                       ),
                       const Divider(),
-                      
+
                       ListTile(
                         leading: Icon(
                           Icons.code,
@@ -189,10 +191,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         title: const Text('Frontend репозиторий'),
                         subtitle: const Text('GitHub'),
                         trailing: const Icon(Icons.open_in_new),
-                        onTap: () => _launchURL('https://github.com/Levletsplay0/MessengerApp'),
+                        onTap: () => _launchURL(
+                          'https://github.com/Levletsplay0/MessengerApp',
+                        ),
                       ),
                       const Divider(),
-                      
+
                       ListTile(
                         leading: Icon(
                           Icons.dns,
@@ -201,15 +205,17 @@ class _SettingsPageState extends State<SettingsPage> {
                         title: const Text('Backend репозиторий'),
                         subtitle: const Text('GitHub'),
                         trailing: const Icon(Icons.open_in_new),
-                        onTap: () => _launchURL('https://github.com/Levletsplay0/Messenger'),
+                        onTap: () => _launchURL(
+                          'https://github.com/Levletsplay0/Messenger',
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               _buildSectionTitle('Действия'),
               const SizedBox(height: 12),
               Card(
@@ -237,12 +243,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         },
                       ),
                       const Divider(),
-                      
+
                       ListTile(
-                        leading: const Icon(
-                          Icons.logout,
-                          color: Colors.red,
-                        ),
+                        leading: const Icon(Icons.logout, color: Colors.red),
                         title: const Text(
                           'Выйти из аккаунта',
                           style: TextStyle(color: Colors.red),
@@ -258,7 +261,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 32),
             ],
           ),

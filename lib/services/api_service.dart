@@ -8,7 +8,10 @@ class ApiService {
   Future<Map<String, dynamic>> getServer() async {
     final Uri url = Uri.parse(baseUrl);
     try {
-      final response = await http.get(url, headers: {'Content-Type': 'application/json'});
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json'},
+      );
       return jsonDecode(response.body);
     } catch (e) {
       throw Exception('Ошибка: $e');
@@ -29,7 +32,13 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> register(String username, String password, String email, String name, String lastName) async {
+  Future<Map<String, dynamic>> register(
+    String username,
+    String password,
+    String email,
+    String name,
+    String lastName,
+  ) async {
     final Uri url = Uri.parse('$baseUrl/register');
     try {
       final response = await http.post(
@@ -52,7 +61,10 @@ class ApiService {
   Future<Map<String, dynamic>> getGroups(String token) async {
     final Uri url = Uri.parse('$baseUrl/groups');
     try {
-      final response = await http.get(url, headers: {'Content-Type': 'application/json', "auth-token": token});
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json', "auth-token": token},
+      );
       return jsonDecode(response.body);
     } catch (e) {
       throw Exception('Ошибка: $e');
@@ -62,7 +74,10 @@ class ApiService {
   Future<Map<String, dynamic>> getMe(String token) async {
     final Uri url = Uri.parse('$baseUrl/users/me');
     try {
-      final response = await http.get(url, headers: {'Content-Type': 'application/json', "auth-token": token});
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json', "auth-token": token},
+      );
       return jsonDecode(response.body);
     } catch (e) {
       throw Exception('Ошибка: $e');
@@ -72,19 +87,31 @@ class ApiService {
   Future<Map<String, dynamic>> deleteAvatar(String token) async {
     final Uri url = Uri.parse('$baseUrl/users/me/avatar');
     try {
-      final response = await http.delete(url, headers: {'Content-Type': 'application/json', 'auth-token': token});
+      final response = await http.delete(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+      );
       return jsonDecode(response.body);
     } catch (e) {
       throw Exception('Ошибка: $e');
     }
   }
 
-  Future<Map<String, dynamic>> changeAvatar(String token, File imageFile) async {
+  Future<Map<String, dynamic>> changeAvatar(
+    String token,
+    File imageFile,
+  ) async {
     final Uri url = Uri.parse('$baseUrl/users/me/avatar');
     try {
       var request = http.MultipartRequest('POST', url);
       request.headers['auth-token'] = token;
-      request.files.add(await http.MultipartFile.fromPath('file', imageFile.path, filename: imageFile.path.split('/').last));
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          imageFile.path,
+          filename: imageFile.path.split('/').last,
+        ),
+      );
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
       return jsonDecode(responseBody);
@@ -93,7 +120,10 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> updateDescription(String token, String description) async {
+  Future<Map<String, dynamic>> updateDescription(
+    String token,
+    String description,
+  ) async {
     final Uri url = Uri.parse('$baseUrl/users/me/description');
     try {
       final response = await http.patch(
@@ -109,27 +139,48 @@ class ApiService {
 
   // === Новые методы для чата ===
 
-  Future<Map<String, dynamic>> getGroupDetails(String token, int groupId) async {
+  Future<Map<String, dynamic>> getGroupDetails(
+    String token,
+    int groupId,
+  ) async {
     final Uri url = Uri.parse('$baseUrl/groups/$groupId');
     try {
-      final response = await http.get(url, headers: {'Content-Type': 'application/json', 'auth-token': token});
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+      );
       return jsonDecode(response.body);
     } catch (e) {
       throw Exception('Ошибка: $e');
     }
   }
 
-  Future<Map<String, dynamic>> getMessages(String token, int groupId, int limit, int offset) async {
-    final Uri url = Uri.parse('$baseUrl/groups/$groupId/messages?limit=$limit&offset=$offset');
+  Future<Map<String, dynamic>> getMessages(
+    String token,
+    int groupId,
+    int limit,
+    int offset,
+  ) async {
+    final Uri url = Uri.parse(
+      '$baseUrl/groups/$groupId/messages?limit=$limit&offset=$offset',
+    );
     try {
-      final response = await http.get(url, headers: {'Content-Type': 'application/json', 'auth-token': token});
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+      );
       return jsonDecode(response.body);
     } catch (e) {
       throw Exception('Ошибка: $e');
     }
   }
 
-  Future<Map<String, dynamic>> sendMessage(String token, int groupId, String content, {File? file}) async {
+  Future<Map<String, dynamic>> sendMessage(
+    String token,
+    int groupId,
+    String content, {
+    File? file,
+  }) async {
     final Uri url = Uri.parse('$baseUrl/groups/$groupId/messages');
     try {
       var request = http.MultipartRequest('POST', url);
@@ -138,7 +189,11 @@ class ApiService {
 
       if (file != null) {
         request.files.add(
-          await http.MultipartFile.fromPath('file', file.path, filename: file.path.split('/').last),
+          await http.MultipartFile.fromPath(
+            'file',
+            file.path,
+            filename: file.path.split('/').last,
+          ),
         );
       }
 
@@ -150,7 +205,12 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> editMessage(String token, int groupId, int messageId, String content) async {
+  Future<Map<String, dynamic>> editMessage(
+    String token,
+    int groupId,
+    int messageId,
+    String content,
+  ) async {
     final Uri url = Uri.parse('$baseUrl/groups/$groupId/messages/$messageId');
     try {
       final response = await http.patch(
@@ -164,45 +224,15 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> deleteMessage(String token, int groupId, int messageId) async {
+  Future<Map<String, dynamic>> deleteMessage(
+    String token,
+    int groupId,
+    int messageId,
+  ) async {
     final Uri url = Uri.parse('$baseUrl/groups/$groupId/messages/$messageId');
     try {
-      final response = await http.delete(url, headers: {'Content-Type': 'application/json', 'auth-token': token});
-      return jsonDecode(response.body);
-    } catch (e) {
-      throw Exception('Ошибка: $e');
-    }
-  }
-
-  Future<Map<String, dynamic>> getGroupMembers(String token, int groupId) async {
-    final Uri url = Uri.parse('$baseUrl/groups/$groupId/members');
-    try {
-      final response = await http.get(url, headers: {'Content-Type': 'application/json', 'auth-token': token});
-      return jsonDecode(response.body);
-    } catch (e) {
-      throw Exception('Ошибка: $e');
-    }
-  }
-
-  Future<Map<String, dynamic>> kickUserFromGroup(String token, int groupId, List<int> userIds) async {
-    final Uri url = Uri.parse('$baseUrl/groups/$groupId/kick');
-    try {
-      final response = await http.post(
-        url, 
-        headers: {'Content-Type': 'application/json', 'auth-token': token}, 
-        body: jsonEncode({"user_ids": userIds}),
-      );
-      return jsonDecode(response.body);
-    } catch (e) {
-      throw Exception('Ошибка: $e');
-    }
-  }
-
-  Future<Map<String, dynamic>> searchUsers(String token, String username, {int limit = 20, int offset = 0}) async {
-    final Uri url = Uri.parse('$baseUrl/users/search?username=$username&limit=$limit&offset=$offset');
-    try {
-      final response = await http.get(
-        url, 
+      final response = await http.delete(
+        url,
         headers: {'Content-Type': 'application/json', 'auth-token': token},
       );
       return jsonDecode(response.body);
@@ -211,7 +241,65 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> addGroupMembers(String token, int groupId, List<int> userIds) async {
+  Future<Map<String, dynamic>> getGroupMembers(
+    String token,
+    int groupId,
+  ) async {
+    final Uri url = Uri.parse('$baseUrl/groups/$groupId/members');
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> kickUserFromGroup(
+    String token,
+    int groupId,
+    List<int> userIds,
+  ) async {
+    final Uri url = Uri.parse('$baseUrl/groups/$groupId/kick');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+        body: jsonEncode({"user_ids": userIds}),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> searchUsers(
+    String token,
+    String username, {
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final Uri url = Uri.parse(
+      '$baseUrl/users/search?username=$username&limit=$limit&offset=$offset',
+    );
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> addGroupMembers(
+    String token,
+    int groupId,
+    List<int> userIds,
+  ) async {
     final Uri url = Uri.parse('$baseUrl/groups/$groupId/members');
     try {
       final response = await http.post(
@@ -225,7 +313,11 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> updateGroupDescription(String token, int groupId, String description) async {
+  Future<Map<String, dynamic>> updateGroupDescription(
+    String token,
+    int groupId,
+    String description,
+  ) async {
     final Uri url = Uri.parse('$baseUrl/groups/$groupId/description');
     try {
       final response = await http.patch(
@@ -239,7 +331,11 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> updateGroupName(String token, int groupId, String name) async {
+  Future<Map<String, dynamic>> updateGroupName(
+    String token,
+    int groupId,
+    String name,
+  ) async {
     final Uri url = Uri.parse('$baseUrl/groups/$groupId/name');
     try {
       final response = await http.patch(
@@ -253,13 +349,21 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> changeGroupAvatar(String token, int groupId, File imageFile) async {
+  Future<Map<String, dynamic>> changeGroupAvatar(
+    String token,
+    int groupId,
+    File imageFile,
+  ) async {
     final Uri url = Uri.parse('$baseUrl/groups/$groupId/avatar');
     try {
       var request = http.MultipartRequest('POST', url);
       request.headers['auth-token'] = token;
       request.files.add(
-        await http.MultipartFile.fromPath('file', imageFile.path, filename: imageFile.path.split('/').last),
+        await http.MultipartFile.fromPath(
+          'file',
+          imageFile.path,
+          filename: imageFile.path.split('/').last,
+        ),
       );
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
@@ -269,7 +373,10 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> deleteGroupAvatar(String token, int groupId) async {
+  Future<Map<String, dynamic>> deleteGroupAvatar(
+    String token,
+    int groupId,
+  ) async {
     final Uri url = Uri.parse('$baseUrl/groups/$groupId/avatar');
     try {
       final response = await http.delete(
@@ -295,7 +402,10 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> leaveUserFromGroup(String token, int groupId) async {
+  Future<Map<String, dynamic>> leaveUserFromGroup(
+    String token,
+    int groupId,
+  ) async {
     final Uri url = Uri.parse('$baseUrl/groups/$groupId/leave');
     try {
       final response = await http.post(
@@ -334,5 +444,4 @@ class ApiService {
       throw Exception('Ошибка: $e');
     }
   }
-  
 }

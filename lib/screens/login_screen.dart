@@ -16,7 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  
+
   @override
   void dispose() {
     _usernameController.dispose();
@@ -42,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final response = await api.login(username, password);
       bool isSuccess = response["success"];
       String message = response["message"];
-      
+
       if (isSuccess == true) {
         String token = response["data"]["auth_token"];
         SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -52,9 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
           context,
           MaterialPageRoute(builder: (context) => const ChatsScreen()),
         );
-        
-      }
-      else {
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Ошибка: $message'),
@@ -63,8 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       }
-    }
-    catch(e) {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Ошибка: $e'),
@@ -73,31 +70,23 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     }
-    
-    
-    
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Вход'),
-      ),
+      appBar: AppBar(title: const Text('Вход')),
       body: Center(
         child: Column(
           children: [
-            const SizedBox(height: 25,),
-            Icon(Icons.login, size: 75,),
-            const SizedBox(height: 5,),
+            const SizedBox(height: 25),
+            Icon(Icons.login, size: 75),
+            const SizedBox(height: 5),
             Text(
               "Вход",
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold
-              ),
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 25,),
+            const SizedBox(height: 25),
             SizedBox(
               width: 300,
               child: TextField(
@@ -107,10 +96,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: const Icon(Icons.person),
                   fillColor: Colors.transparent,
                 ),
-                
               ),
             ),
-            SizedBox(height: 25,),
+            SizedBox(height: 25),
             SizedBox(
               width: 300,
               child: TextField(
@@ -121,8 +109,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: const Icon(Icons.password),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _isPasswordVisible 
-                          ? Icons.visibility_off 
+                      _isPasswordVisible
+                          ? Icons.visibility_off
                           : Icons.visibility,
                     ),
                     onPressed: () {
@@ -133,20 +121,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   fillColor: Colors.transparent,
                 ),
-                
               ),
             ),
-            SizedBox(height: 25,),
+            SizedBox(height: 25),
             SizedBox(
               width: 300,
-              child: 
-                OutlinedButton(
-                  onPressed: _login,
-                  
-                  child: const Text('Войти'),
-                ),
+              child: OutlinedButton(
+                onPressed: _login,
+
+                child: const Text('Войти'),
+              ),
             ),
-            SizedBox(height: 25,),
+            SizedBox(height: 25),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -159,7 +145,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     HapticFeedback.mediumImpact();
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const RegisterScreen(),
+                      ),
                     );
                   },
                   child: const Text(
@@ -172,9 +160,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
             ),
-            
           ],
-        )
+        ),
       ),
     );
   }

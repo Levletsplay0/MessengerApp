@@ -82,16 +82,19 @@ class _ChatScreenState extends State<ChatScreen> {
       _updateConnectionStatus([ConnectivityResult.none]);
     }
 
-    _connectivitySubscription = _connectivity.onConnectivityChanged.listen((result) {
+    _connectivitySubscription = _connectivity.onConnectivityChanged.listen((
+      result,
+    ) {
       _updateConnectionStatus(result);
     });
   }
 
   void _updateConnectionStatus(List<ConnectivityResult> result) {
-    final hasConnection = result.any((r) => 
-      r == ConnectivityResult.mobile || 
-      r == ConnectivityResult.wifi || 
-      r == ConnectivityResult.ethernet
+    final hasConnection = result.any(
+      (r) =>
+          r == ConnectivityResult.mobile ||
+          r == ConnectivityResult.wifi ||
+          r == ConnectivityResult.ethernet,
     );
 
     if (mounted) {
@@ -108,7 +111,7 @@ class _ChatScreenState extends State<ChatScreen> {
         print('Интернет восстановлен, переподключаем WebSocket');
         _wasDisconnected = false;
         _reconnectWebSocket();
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -130,8 +133,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent && 
-        !_isLoadingMore && 
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent &&
+        !_isLoadingMore &&
         _hasMoreMessages &&
         !_isLoading) {
       _loadMoreMessages();
@@ -172,7 +176,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _loadGroupDetails() async {
     try {
-      final response = await _apiService.getGroupDetails(_token!, widget.groupId);
+      final response = await _apiService.getGroupDetails(
+        _token!,
+        widget.groupId,
+      );
       if (response['success'] == true && response['data'] != null) {
         setState(() {
           _groupAvatarPath = response['data']['avatar_path'];
@@ -187,7 +194,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _loadMessages() async {
     try {
-      final response = await _apiService.getMessages(_token!, widget.groupId, 50, 0);
+      final response = await _apiService.getMessages(
+        _token!,
+        widget.groupId,
+        50,
+        0,
+      );
       if (response['success'] == true && response['data'] != null) {
         setState(() {
           _messages = List.from(response['data']);
@@ -200,7 +212,7 @@ class _ChatScreenState extends State<ChatScreen> {
           _hasMoreMessages = _messages.length >= 50;
           _isLoading = false;
         });
-        
+
         Future.delayed(const Duration(milliseconds: 150), () {
           _scrollToBottom();
         });
@@ -211,7 +223,7 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     } catch (e) {
-      if(mounted){
+      if (mounted) {
         setState(() {
           _error = e.toString();
           _isLoading = false;
@@ -228,11 +240,16 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     try {
-      final response = await _apiService.getMessages(_token!, widget.groupId, 50, _currentOffset);
-      
+      final response = await _apiService.getMessages(
+        _token!,
+        widget.groupId,
+        50,
+        _currentOffset,
+      );
+
       if (response['success'] == true && response['data'] != null) {
         final newMessages = List.from(response['data']);
-        
+
         if (newMessages.isEmpty) {
           setState(() {
             _hasMoreMessages = false;
@@ -252,7 +269,6 @@ class _ChatScreenState extends State<ChatScreen> {
           _hasMoreMessages = newMessages.length >= 50;
           _isLoadingMore = false;
         });
-
       } else {
         setState(() {
           _isLoadingMore = false;
@@ -278,7 +294,7 @@ class _ChatScreenState extends State<ChatScreen> {
             _messages.insert(0, data);
           }
         });
-        
+
         Future.delayed(const Duration(milliseconds: 100), () {
           _smartScrollToBottom();
         });
@@ -300,7 +316,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(0);
-      
+
       Future.delayed(const Duration(milliseconds: 50), () {
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
@@ -316,7 +332,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void _smartScrollToBottom() {
     if (_scrollController.hasClients) {
       final isAtBottom = _scrollController.offset <= 100;
-      
+
       if (isAtBottom) {
         _scrollController.animateTo(
           0,
@@ -348,7 +364,9 @@ class _ChatScreenState extends State<ChatScreen> {
         );
         if (response['success'] == true && response['data'] != null) {
           setState(() {
-            final exists = _messages.any((m) => m['id'] == response['data']['id']);
+            final exists = _messages.any(
+              (m) => m['id'] == response['data']['id'],
+            );
             if (!exists) {
               _messages.insert(0, response['data']);
             }
@@ -362,13 +380,13 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() => _selectedFile = null);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка отправки: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка отправки: $e')));
       }
     } finally {
       setState(() => _isSending = false);
-      
+
       Future.delayed(const Duration(milliseconds: 100), () {
         _scrollToBottom();
       });
@@ -419,7 +437,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
               ListTile(
-                leading: Icon(Icons.copy_rounded, color: Theme.of(context).colorScheme.primary),
+                leading: Icon(
+                  Icons.copy_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 title: const Text('Копировать'),
                 onTap: () {
                   Navigator.pop(context);
@@ -436,7 +457,10 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               if (hasFile)
                 ListTile(
-                  leading: Icon(Icons.download_outlined, color: Theme.of(context).colorScheme.primary),
+                  leading: Icon(
+                    Icons.download_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   title: const Text('Скачать файл'),
                   onTap: () {
                     Navigator.pop(context);
@@ -447,7 +471,10 @@ class _ChatScreenState extends State<ChatScreen> {
               if (isOwn) ...[
                 const Divider(height: 1),
                 ListTile(
-                  leading: Icon(Icons.edit_rounded, color: Theme.of(context).colorScheme.primary),
+                  leading: Icon(
+                    Icons.edit_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   title: const Text('Редактировать'),
                   onTap: () {
                     Navigator.pop(context);
@@ -455,8 +482,14 @@ class _ChatScreenState extends State<ChatScreen> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.delete_rounded, color: Colors.redAccent),
-                  title: const Text('Удалить', style: TextStyle(color: Colors.redAccent)),
+                  leading: const Icon(
+                    Icons.delete_rounded,
+                    color: Colors.redAccent,
+                  ),
+                  title: const Text(
+                    'Удалить',
+                    style: TextStyle(color: Colors.redAccent),
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _deleteMessage(message['id']);
@@ -479,7 +512,10 @@ class _ChatScreenState extends State<ChatScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.edit_rounded, color: Theme.of(context).colorScheme.primary),
+            Icon(
+              Icons.edit_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(width: 8),
             const Text('Редактировать'),
           ],
@@ -498,7 +534,10 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -514,7 +553,9 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             onPressed: () {
@@ -564,7 +605,9 @@ class _ChatScreenState extends State<ChatScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Удалить'),
@@ -578,7 +621,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _showSnackBar('Нет подключения к интернету');
         return;
       }
-      
+
       _wsService.deleteMessage(messageId);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -601,7 +644,9 @@ class _ChatScreenState extends State<ChatScreen> {
             Text('Выйти из группы?'),
           ],
         ),
-        content: const Text('Вы покидаете эту группу. Это действие нельзя отменить.'),
+        content: const Text(
+          'Вы покидаете эту группу. Это действие нельзя отменить.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -610,7 +655,9 @@ class _ChatScreenState extends State<ChatScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Выйти'),
@@ -628,11 +675,14 @@ class _ChatScreenState extends State<ChatScreen> {
       try {
         _wsSubscription?.cancel();
         _wsService.disconnect();
-        
-        setState(() => _isLoading = true); 
 
-        final response = await _apiService.leaveUserFromGroup(_token!, widget.groupId);
-        
+        setState(() => _isLoading = true);
+
+        final response = await _apiService.leaveUserFromGroup(
+          _token!,
+          widget.groupId,
+        );
+
         if (response['success'] == true) {
           String message = response["message"];
           if (mounted) {
@@ -642,20 +692,22 @@ class _ChatScreenState extends State<ChatScreen> {
                 behavior: SnackBarBehavior.floating,
               ),
             );
-            
-            Navigator.of(context).pop(true); 
+
+            Navigator.of(context).pop(true);
           }
         } else {
           if (mounted) {
             setState(() => _isLoading = false);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(response['message'] ?? 'Ошибка при выходе из группы'),
+                content: Text(
+                  response['message'] ?? 'Ошибка при выходе из группы',
+                ),
                 behavior: SnackBarBehavior.floating,
               ),
             );
-            
-            _reconnectWebSocket(); 
+
+            _reconnectWebSocket();
           }
         }
       } catch (e) {
@@ -702,8 +754,13 @@ class _ChatScreenState extends State<ChatScreen> {
         scrolledUnderElevation: 1,
         titleSpacing: 4,
         title: GestureDetector(
-          onTap: (){
-            Navigator.push(context, MaterialPageRoute(builder: (context) => GroupInfoPage(groupId: widget.groupId)));
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => GroupInfoPage(groupId: widget.groupId),
+              ),
+            );
           },
           child: Row(
             children: [
@@ -715,7 +772,10 @@ class _ChatScreenState extends State<ChatScreen> {
                   children: [
                     Text(
                       widget.groupName,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
@@ -732,30 +792,30 @@ class _ChatScreenState extends State<ChatScreen> {
                             height: 10,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: _wsService.isConnected && _isConnectedToInternet 
-                                  ? Colors.greenAccent 
+                              color:
+                                  _wsService.isConnected &&
+                                      _isConnectedToInternet
+                                  ? Colors.greenAccent
                                   : Colors.redAccent,
                             ),
                           ),
                         ),
-                        SizedBox(width: 5,),
+                        SizedBox(width: 5),
                         Text(
-                          _wsService.isConnected && _isConnectedToInternet 
-                              ? "Соединено" 
+                          _wsService.isConnected && _isConnectedToInternet
+                              ? "Соединено"
                               : "Нет соединения",
                           style: TextStyle(
-                            color: _wsService.isConnected && _isConnectedToInternet 
-                                ? Colors.greenAccent 
+                            color:
+                                _wsService.isConnected && _isConnectedToInternet
+                                ? Colors.greenAccent
                                 : Colors.redAccent,
                             fontSize: 12,
-                            fontWeight: FontWeight.bold
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        
                       ],
-                    )
-                    
-                    
+                    ),
                   ],
                 ),
               ),
@@ -776,7 +836,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 value: 'leave_group',
                 child: Row(
                   children: [
-                    const Icon(Icons.exit_to_app, color: Colors.redAccent, size: 20),
+                    const Icon(
+                      Icons.exit_to_app,
+                      color: Colors.redAccent,
+                      size: 20,
+                    ),
                     const SizedBox(width: 12),
                     const Text('Выйти из группы'),
                   ],
@@ -800,7 +864,10 @@ class _ChatScreenState extends State<ChatScreen> {
                   SizedBox(width: 8),
                   Text(
                     'Нет подключения к интернету',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -809,70 +876,92 @@ class _ChatScreenState extends State<ChatScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.error_outline, size: 48, color: Colors.grey[600]),
-                            const SizedBox(height: 12),
-                            Text('Ошибка: $_error', style: TextStyle(color: Colors.grey[600])),
-                            const SizedBox(height: 16),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                setState(() {
-                                  _isLoading = true;
-                                  _error = null;
-                                });
-                                _loadMessages();
-                              },
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Повторить'),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: Colors.grey[600],
                         ),
-                      )
-                    : _messages.isEmpty
-                        ? const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.chat_bubble_outline, size: 80, color: Colors.grey),
-                                SizedBox(height: 16),
-                                Text('Нет сообщений', style: TextStyle(fontSize: 18, color: Colors.grey)),
-                                SizedBox(height: 8),
-                                Text('Будьте первым, кто напишет!', style: TextStyle(color: Colors.grey)),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            controller: _scrollController,
-                            reverse: true,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            itemCount: _messages.length + (_hasMoreMessages ? 1 : 0),
-                            itemBuilder: (context, index) {
-                              if (index == _messages.length && _hasMoreMessages) {
-                                return _isLoadingMore
-                                    ? const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 16),
-                                        child: Center(
-                                          child: CircularProgressIndicator(),
-                                        ),
-                                      )
-                                    : const SizedBox.shrink();
-                              }
+                        const SizedBox(height: 12),
+                        Text(
+                          'Ошибка: $_error',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _isLoading = true;
+                              _error = null;
+                            });
+                            _loadMessages();
+                          },
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Повторить'),
+                        ),
+                      ],
+                    ),
+                  )
+                : _messages.isEmpty
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 80,
+                          color: Colors.grey,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Нет сообщений',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Будьте первым, кто напишет!',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    reverse: true,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    itemCount: _messages.length + (_hasMoreMessages ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _messages.length && _hasMoreMessages) {
+                        return _isLoadingMore
+                            ? const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              )
+                            : const SizedBox.shrink();
+                      }
 
-                              final message = _messages[index];
-                              final isOwn = message['author_id'] == _currentUserId;
-                              final showDate = index == _messages.length - 1 || _shouldShowDateSeparator(index);
+                      final message = _messages[index];
+                      final isOwn = message['author_id'] == _currentUserId;
+                      final showDate =
+                          index == _messages.length - 1 ||
+                          _shouldShowDateSeparator(index);
 
-                              return Column(
-                                children: [
-                                  _buildMessageBubble(message, isOwn),
-                                  if (showDate) _buildDateSeparator(message['sent_at']),
-                                ],
-                              );
-                            },
-                          ),
+                      return Column(
+                        children: [
+                          _buildMessageBubble(message, isOwn),
+                          if (showDate) _buildDateSeparator(message['sent_at']),
+                        ],
+                      );
+                    },
+                  ),
           ),
           _buildInputArea(),
         ],
@@ -894,7 +983,9 @@ class _ChatScreenState extends State<ChatScreen> {
     final now = DateTime.now();
     String text;
 
-    if (date.year == now.year && date.month == now.month && date.day == now.day) {
+    if (date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day) {
       text = 'Сегодня';
     } else if (date.year == now.year &&
         date.month == now.month &&
@@ -931,7 +1022,8 @@ class _ChatScreenState extends State<ChatScreen> {
     final sentAt = DateTime.parse(message['sent_at']).toLocal();
     final timeStr = DateFormat('HH:mm').format(sentAt);
     final isEdited = message['edited_at'] != null;
-    final authorName = message['author_name'] ?? message['author_username'] ?? 'Пользователь';
+    final authorName =
+        message['author_name'] ?? message['author_username'] ?? 'Пользователь';
     final authorId = message['author_id'];
 
     String? filePath;
@@ -945,7 +1037,8 @@ class _ChatScreenState extends State<ChatScreen> {
       fileSize = fileData['size'];
     }
 
-    final hasFile = filePath != null && filePath.isNotEmpty && filePath != 'null';
+    final hasFile =
+        filePath != null && filePath.isNotEmpty && filePath != 'null';
 
     return Align(
       alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
@@ -972,14 +1065,21 @@ class _ChatScreenState extends State<ChatScreen> {
               onLongPress: () => _showMessageOptions(message),
               child: Container(
                 margin: const EdgeInsets.symmetric(vertical: 2),
-                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.78,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 9,
+                ),
                 decoration: BoxDecoration(
                   color: isOwn
-                      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.18)
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.18)
                       : Theme.of(context).brightness == Brightness.dark
-                          ? Colors.grey[850]
-                          : Colors.grey[200],
+                      ? Colors.grey[850]
+                      : Colors.grey[200],
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(18),
                     topRight: const Radius.circular(18),
@@ -988,7 +1088,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 child: Column(
-                  crossAxisAlignment: isOwn ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  crossAxisAlignment: isOwn
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
                   children: [
                     if (!isOwn)
                       Padding(
@@ -998,7 +1100,8 @@ class _ChatScreenState extends State<ChatScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => UsersProfileScreen(userId: authorId),
+                                builder: (context) =>
+                                    UsersProfileScreen(userId: authorId),
                               ),
                             );
                           },
@@ -1015,10 +1118,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     if (hasFile)
                       _buildFileAttachment(filePath, fileName!, fileSize),
                     if (content.isNotEmpty)
-                      MessageContent(
-                        content: content,
-                        isOwn: isOwn,
-                      ),
+                      MessageContent(content: content, isOwn: isOwn),
                     const SizedBox(height: 4),
                     Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1026,15 +1126,27 @@ class _ChatScreenState extends State<ChatScreen> {
                         if (isEdited)
                           const Text(
                             'изменено ',
-                            style: TextStyle(fontSize: 10, color: Colors.grey, fontStyle: FontStyle.italic),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
-                        Text(timeStr, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                        Text(
+                          timeStr,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
+                        ),
                         if (isOwn) ...[
                           const SizedBox(width: 4),
                           Icon(
                             Icons.done_all_rounded,
                             size: 14,
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.7),
                           ),
                         ],
                       ],
@@ -1050,7 +1162,7 @@ class _ChatScreenState extends State<ChatScreen> {
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text("Это вы! 😊", style: TextStyle(fontSize: 16),),
+                    content: Text("Это вы! 😊", style: TextStyle(fontSize: 16)),
                     duration: Duration(seconds: 1),
                     backgroundColor: Colors.blue,
                   ),
@@ -1065,19 +1177,27 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildUserAvatar(dynamic message) {
-    final avatarPath = message['author_avatar'] ?? message['author_avatar_path'];
-    final authorName = message['author_name'] ?? message['author_username'] ?? 'Пользователь';
-    
+    final avatarPath =
+        message['author_avatar'] ?? message['author_avatar_path'];
+    final authorName =
+        message['author_name'] ?? message['author_username'] ?? 'Пользователь';
+
     if (avatarPath != null && avatarPath.toString().isNotEmpty) {
       final url = _getFullUrl(avatarPath.toString());
-      return CircleAvatar(
-        radius: 16,
-        backgroundImage: NetworkImage(url),
-      );
+      return CircleAvatar(radius: 16, backgroundImage: NetworkImage(url));
     }
 
-    final firstLetter = authorName.isNotEmpty ? authorName[0].toUpperCase() : '?';
-    final colors = [Colors.blue, Colors.green, Colors.purple, Colors.orange, Colors.teal, Colors.pink];
+    final firstLetter = authorName.isNotEmpty
+        ? authorName[0].toUpperCase()
+        : '?';
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.purple,
+      Colors.orange,
+      Colors.teal,
+      Colors.pink,
+    ];
     final color = colors[authorName.length % colors.length];
 
     return CircleAvatar(
@@ -1085,15 +1205,24 @@ class _ChatScreenState extends State<ChatScreen> {
       backgroundColor: color,
       child: Text(
         firstLetter,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+        ),
       ),
     );
   }
 
-  Widget _buildFileAttachment(String filePath, String fileName, [int? fileSize]) {
+  Widget _buildFileAttachment(
+    String filePath,
+    String fileName, [
+    int? fileSize,
+  ]) {
     final fileUrl = _getFullUrl(filePath);
 
-    final isImage = fileName.toLowerCase().endsWith('.jpg') ||
+    final isImage =
+        fileName.toLowerCase().endsWith('.jpg') ||
         fileName.toLowerCase().endsWith('.jpeg') ||
         fileName.toLowerCase().endsWith('.png') ||
         fileName.toLowerCase().endsWith('.gif') ||
@@ -1137,7 +1266,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: CircularProgressIndicator(
                       value: loadingProgress.expectedTotalBytes != null
                           ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
+                                loadingProgress.expectedTotalBytes!
                           : null,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         Theme.of(context).colorScheme.primary,
@@ -1153,10 +1282,16 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.broken_image_rounded, size: 40, color: Colors.grey[600]),
+                      Icon(
+                        Icons.broken_image_rounded,
+                        size: 40,
+                        color: Colors.grey[600],
+                      ),
                       const SizedBox(height: 8),
-                      Text('Не удалось загрузить',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      Text(
+                        'Не удалось загрузить',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
                     ],
                   ),
                 );
@@ -1172,11 +1307,16 @@ class _ChatScreenState extends State<ChatScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [Colors.black.withValues(alpha: 0.65), Colors.transparent],
+                    colors: [
+                      Colors.black.withValues(alpha: 0.65),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
                 child: Text(
-                  fileSize != null ? '$fileName • ${_formatFileSize(fileSize)}' : fileName,
+                  fileSize != null
+                      ? '$fileName • ${_formatFileSize(fileSize)}'
+                      : fileName,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -1193,20 +1333,27 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildFilePreviewWidget(String filePath, String fileName, [int? fileSize]) {
+  Widget _buildFilePreviewWidget(
+    String filePath,
+    String fileName, [
+    int? fileSize,
+  ]) {
     IconData fileIcon;
     Color iconColor;
 
     if (fileName.toLowerCase().endsWith('.pdf')) {
       fileIcon = Icons.picture_as_pdf_rounded;
       iconColor = Colors.redAccent;
-    } else if (fileName.toLowerCase().endsWith('.doc') || fileName.toLowerCase().endsWith('.docx')) {
+    } else if (fileName.toLowerCase().endsWith('.doc') ||
+        fileName.toLowerCase().endsWith('.docx')) {
       fileIcon = Icons.description_rounded;
       iconColor = Colors.blueAccent;
-    } else if (fileName.toLowerCase().endsWith('.mp4') || fileName.toLowerCase().endsWith('.avi')) {
+    } else if (fileName.toLowerCase().endsWith('.mp4') ||
+        fileName.toLowerCase().endsWith('.avi')) {
       fileIcon = Icons.video_file_rounded;
       iconColor = Colors.purpleAccent;
-    } else if (fileName.toLowerCase().endsWith('.mp3') || fileName.toLowerCase().endsWith('.wav')) {
+    } else if (fileName.toLowerCase().endsWith('.mp3') ||
+        fileName.toLowerCase().endsWith('.wav')) {
       fileIcon = Icons.audio_file_rounded;
       iconColor = Colors.orangeAccent;
     } else {
@@ -1233,7 +1380,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   Text(
                     fileName,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 2,
                   ),
@@ -1256,7 +1406,7 @@ class _ChatScreenState extends State<ChatScreen> {
   String _formatFileType(String fileName, [int? fileSize]) {
     final extension = fileName.split('.').last.toLowerCase();
     String sizeStr = fileSize != null ? ' • ${_formatFileSize(fileSize)}' : '';
-    
+
     if (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(extension)) {
       return 'Изображение • ${extension.toUpperCase()}$sizeStr';
     } else if (['mp4', 'avi', 'mov'].contains(extension)) {
@@ -1272,7 +1422,8 @@ class _ChatScreenState extends State<ChatScreen> {
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes Б';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} КБ';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} МБ';
+    if (bytes < 1024 * 1024 * 1024)
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} МБ';
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} ГБ';
   }
 
@@ -1300,8 +1451,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return const Center(
-                    child: Text('Не удалось загрузить изображение',
-                        style: TextStyle(color: Colors.white)),
+                    child: Text(
+                      'Не удалось загрузить изображение',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   );
                 },
               ),
@@ -1419,7 +1572,6 @@ class _ChatScreenState extends State<ChatScreen> {
       } else {
         _showSnackBar('Файл сохранен: $fileName');
       }
-
     } catch (e) {
       if (Navigator.canPop(context)) {
         Navigator.pop(context);
@@ -1439,13 +1591,17 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
-  
+
   Widget _buildInputArea() {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.3))),
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+          ),
+        ),
       ),
       child: SafeArea(
         top: false,
@@ -1459,23 +1615,29 @@ class _ChatScreenState extends State<ChatScreen> {
                 _buildCircleButton(
                   onTap: _pickFile,
                   child: Icon(
-                    _selectedFile != null ? Icons.file_copy : Icons.attach_file_rounded,
+                    _selectedFile != null
+                        ? Icons.file_copy
+                        : Icons.attach_file_rounded,
                     size: 20,
                   ),
                 ),
-                
+
                 const SizedBox(width: 6),
                 Expanded(
                   child: TextField(
                     controller: _messageController,
                     textCapitalization: TextCapitalization.sentences,
                     maxLines: 6,
-                    minLines: 1, 
+                    minLines: 1,
                     textInputAction: TextInputAction.newline,
                     decoration: InputDecoration(
-                      hintText: _isConnectedToInternet ? 'Сообщение...' : 'Нет интернета...',
+                      hintText: _isConnectedToInternet
+                          ? 'Сообщение...'
+                          : 'Нет интернета...',
                       hintStyle: TextStyle(
-                        color: _isConnectedToInternet ? Colors.grey[500] : Colors.redAccent,
+                        color: _isConnectedToInternet
+                            ? Colors.grey[500]
+                            : Colors.redAccent,
                         fontSize: 15,
                       ),
                       isDense: true,
@@ -1487,7 +1649,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 const SizedBox(width: 6),
 
                 _buildCircleButton(
-                  onTap: _isSending || !_isConnectedToInternet ? null : () => _sendMessage(),
+                  onTap: _isSending || !_isConnectedToInternet
+                      ? null
+                      : () => _sendMessage(),
                   child: _isSending
                       ? const SizedBox(
                           width: 20,
@@ -1498,7 +1662,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                         )
                       : Icon(
-                          Icons.send_rounded, 
+                          Icons.send_rounded,
                           size: 20,
                           color: _isConnectedToInternet ? null : Colors.grey,
                         ),
@@ -1521,9 +1685,9 @@ class _ChatScreenState extends State<ChatScreen> {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: onTap == null 
-              ? Colors.grey.withValues(alpha: 0.3) 
-              : Colors.blue.withValues(alpha: 0.3), 
+          color: onTap == null
+              ? Colors.grey.withValues(alpha: 0.3)
+              : Colors.blue.withValues(alpha: 0.3),
           width: 2.0,
         ),
       ),
@@ -1540,8 +1704,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildSelectedFilePreview() {
     final fileName = _selectedFile!.path.split('/').last;
-    final extension = fileName.contains('.') ? '.${fileName.split('.').last}' : '';
-    final nameWithoutExt = fileName.contains('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+    final extension = fileName.contains('.')
+        ? '.${fileName.split('.').last}'
+        : '';
+    final nameWithoutExt = fileName.contains('.')
+        ? fileName.substring(0, fileName.lastIndexOf('.'))
+        : fileName;
     final fileSize = _selectedFile!.lengthSync();
 
     return Container(
@@ -1560,7 +1728,9 @@ class _ChatScreenState extends State<ChatScreen> {
           Container(
             padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -1602,7 +1772,11 @@ class _ChatScreenState extends State<ChatScreen> {
               onTap: () => setState(() => _selectedFile = null),
               child: Padding(
                 padding: const EdgeInsets.all(5),
-                child: Icon(Icons.close_rounded, size: 18, color: Colors.grey[600]),
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 18,
+                  color: Colors.grey[600],
+                ),
               ),
             ),
           ),
@@ -1637,7 +1811,10 @@ class _ChatScreenState extends State<ChatScreen> {
       backgroundColor: color,
       child: Text(
         firstLetter,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
