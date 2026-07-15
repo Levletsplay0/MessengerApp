@@ -321,5 +321,18 @@ class ApiService {
       throw Exception('Ошибка: $e');
     }
   }
+
+  Future<Map<String, dynamic>> deleteGroup(String token, int groupId) async {
+    final Uri url = Uri.parse('$baseUrl/groups/$groupId');
+    try {
+      final response = await http.delete(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
   
 }

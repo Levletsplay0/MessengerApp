@@ -763,10 +763,6 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
         actions: [
-          
-          
-          
-
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             tooltip: 'Меню',
@@ -1469,7 +1465,6 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 
                 const SizedBox(width: 6),
-
                 Expanded(
                   child: TextField(
                     controller: _messageController,

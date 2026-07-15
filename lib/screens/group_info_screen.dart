@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/add_members_screen.dart';
+import 'package:flutter_application_1/screens/chats_page.dart';
+import 'package:flutter_application_1/screens/chats_screen.dart';
 import 'package:flutter_application_1/screens/users_profile_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -462,11 +464,98 @@ class _GroupInfoPage extends State<GroupInfoPage> {
     }
   }
 
+  Future<void> _deleteGroup() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_rounded, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Выйти из группы?'),
+          ],
+        ),
+        content: const Text('Вы покидаете эту группу. Это действие нельзя отменить.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Выйти'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && _token != null) {
+      try {        
+        setState(() => _isLoading = true); 
+
+        final ApiService apiService = ApiService();
+        final response = await apiService.deleteGroup(_token!, widget.groupId);
+        
+        if (response['success'] == true) {
+          String message = response["message"];
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(message),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => ChatsScreen()),
+              (route) => false,
+            );
+          }
+        } else {
+          if (mounted) {
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(response['message'] ?? 'Ошибка при выходе из группы'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );         
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Ошибка: $e'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('О группе')),
+      appBar: AppBar(
+        title: const Text('О группе'),
+        actions: [
+          IconButton(
+            onPressed: _deleteGroup, 
+            icon: Icon(Icons.delete_outline_rounded),
+            color: Colors.red,
+            tooltip: "Удалить группу",
+          )
+        ],
+      ),
       body: _isLoading ? _buildLoadingView() : _buildContentView(),
     );
   }
