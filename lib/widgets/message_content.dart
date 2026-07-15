@@ -25,7 +25,9 @@ class MessageContent extends StatelessWidget {
     return MarkdownBody(
       data: content,
       selectable: true,
+      
       styleSheet: MarkdownStyleSheet(
+        tableColumnWidth: FixedColumnWidth(150.0),
         p: const TextStyle(fontSize: 15, height: 1.35),
         code: TextStyle(
           backgroundColor: isDark ? Colors.grey[900] : Colors.grey[100],
