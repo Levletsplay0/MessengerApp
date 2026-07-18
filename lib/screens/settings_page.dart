@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/login_screen.dart';
 import 'package:flutter_application_1/providers/theme_provider.dart';
+import 'package:flutter_application_1/services/api_service.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -77,10 +78,26 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    
+    final api = ApiService();
+    final response = await api.logout(token!);
+    
     await prefs.remove('auth_token');
 
     if (!mounted) return;
 
+    final isSuccess = response["success"];
+    if (isSuccess == true){
+      final message = response["message"];
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.greenAccent,
+        ),
+      );
+    }
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const LoginScreen()),

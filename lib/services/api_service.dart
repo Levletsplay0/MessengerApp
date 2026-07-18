@@ -444,4 +444,17 @@ class ApiService {
       throw Exception('Ошибка: $e');
     }
   }
+
+  Future<Map<String, dynamic>> logout(String token) async {
+    final Uri url = Uri.parse('$baseUrl/logout');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json', 'auth-token': token},
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      throw Exception('Ошибка: $e');
+    }
+  }
 }
