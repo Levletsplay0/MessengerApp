@@ -21,6 +21,7 @@ class MessageContent extends StatelessWidget {
     return MarkdownBody(
       data: content,
       selectable: true,
+      softLineBreak: true,
 
       styleSheet: MarkdownStyleSheet(
         tableColumnWidth: FixedColumnWidth(150.0),
