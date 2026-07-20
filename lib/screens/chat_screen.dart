@@ -58,6 +58,10 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isConnectedToInternet = true;
   bool _wasDisconnected = false;
 
+  final Map<int, String> _typingUsers = {};
+  Timer? _typingDebounceTimer;
+  bool _isLocalUserTyping = false;
+
   String _getFullUrl(String path) {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
@@ -71,6 +75,43 @@ class _ChatScreenState extends State<ChatScreen> {
     _init();
     _scrollController.addListener(_onScroll);
     _initConnectivity();
+    
+    _messageController.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    final text = _messageController.text.trim();
+
+    if (text.isEmpty) {
+      _stopTyping();
+      return;
+    }
+
+    if (!_isLocalUserTyping) {
+      _wsService.sendTyping();
+      _isLocalUserTyping = true;
+    }
+
+    // Сбрасываем таймер при каждом новом нажатии
+    _typingDebounceTimer?.cancel();
+    _typingDebounceTimer = Timer(const Duration(seconds: 2), () {
+      _stopTyping();
+    });
+  }
+
+  void _stopTyping() {
+    if (_isLocalUserTyping) {
+      _wsService.sendStopTyping();
+      _isLocalUserTyping = false;
+    }
+    _typingDebounceTimer?.cancel();
+  }
+
+  String _getTypingText() {
+    final names = _typingUsers.values.take(2).toList();
+    if (names.length == 1) return '${names[0]} печатает...';
+    if (names.length == 2) return '${names[0]} и ${names[1]} печатают...';
+    return 'Несколько участников печатают...';
   }
 
   Future<void> _initConnectivity() async {
@@ -293,6 +334,7 @@ class _ChatScreenState extends State<ChatScreen> {
           if (!exists) {
             _messages.insert(0, data);
           }
+          _typingUsers.remove(data['author_id']);
         });
 
         Future.delayed(const Duration(milliseconds: 100), () {
@@ -309,6 +351,22 @@ class _ChatScreenState extends State<ChatScreen> {
     } else if (type == 'delete_message' && data != null) {
       setState(() {
         _messages.removeWhere((m) => m['id'] == data['id']);
+      });
+    } 
+    else if (type == 'typing' && data != null) {
+      setState(() {
+        final userId = data['user_id'];
+        final username = data['username'] ?? 'Пользователь';
+        if (userId != null && userId != _currentUserId) {
+          _typingUsers[userId] = username;
+        }
+      });
+    } else if (type == 'stop_typing' && data != null) {
+      setState(() {
+        final userId = data['user_id'];
+        if (userId != null) {
+          _typingUsers.remove(userId);
+        }
       });
     }
   }
@@ -351,6 +409,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final content = _messageController.text.trim();
     if (content.isEmpty && _selectedFile == null) return;
+
+    _stopTyping();
 
     setState(() => _isSending = true);
 
@@ -740,8 +800,10 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollController.removeListener(_onScroll);
     _wsSubscription?.cancel();
     _wsService.disconnect();
+    _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
     _scrollController.dispose();
+    _typingDebounceTimer?.cancel();
     super.dispose();
   }
 
@@ -778,10 +840,27 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    Text(
-                      '$_membersCount участников',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      overflow: TextOverflow.ellipsis,
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(
+                        _typingUsers.isNotEmpty
+                            ? _getTypingText()
+                            : '$_membersCount участников',
+                        key: ValueKey(_typingUsers.isNotEmpty),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _typingUsers.isNotEmpty
+                              ? Colors.green
+                              : Colors.grey[600],
+                          fontStyle: _typingUsers.isNotEmpty
+                              ? FontStyle.italic
+                              : FontStyle.normal,
+                          fontWeight: _typingUsers.isNotEmpty
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     Row(
                       children: [
@@ -800,7 +879,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 5),
+                        const SizedBox(width: 5),
                         Text(
                           _wsService.isConnected && _isConnectedToInternet
                               ? "Соединено"
@@ -1163,7 +1242,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text("Это вы! 😊", style: TextStyle(fontSize: 16)),
-                    duration: Duration(seconds: 1),
+                    duration: const Duration(seconds: 1),
                     backgroundColor: Colors.blue,
                   ),
                 );

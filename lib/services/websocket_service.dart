@@ -116,4 +116,16 @@ class WebSocketService {
     _isConnected = false;
     _messageController.close();
   }
+
+    void sendTyping() {
+    if (_channel != null && _isConnected) {
+      _channel!.sink.add(jsonEncode({"action": "typing"}));
+    }
+  }
+
+  void sendStopTyping() {
+    if (_channel != null && _isConnected) {
+      _channel!.sink.add(jsonEncode({"action": "stop_typing"}));
+    }
+  }
 }
