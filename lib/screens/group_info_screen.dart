@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/add_members_screen.dart';
@@ -410,7 +409,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
 
   Future<void> _confirmDeleteAvatar() async {
     final confirmed = await _showConfirmDialog(
-      title: 'Удалить аватарку?',
+      title: 'Удалить?',
       content:
           'Вы уверены, что хотите удалить аватарку группы?\n\nЭто действие нельзя будет отменить.',
       confirmText: 'Удалить',
@@ -418,46 +417,6 @@ class _GroupInfoPage extends State<GroupInfoPage> {
     if (confirmed == true) {
       await _deleteAvatarApi();
     }
-  }
-
-  void _changeAvatar() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Управление аватаркой',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.image, color: Colors.blue),
-              title: const Text('Загрузить фото'),
-              onTap: () {
-                Navigator.pop(ctx);
-                _pickAndUploadAvatar();
-              },
-            ),
-            if (_avatarPath.isNotEmpty)
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Удалить фото'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _confirmDeleteAvatar();
-                },
-              ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
   }
 
   Future<void> _openAddMembers() async {
@@ -634,7 +593,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
         SizedBox(
           height: 50,
           child: OutlinedButton.icon(
-            onPressed: _changeAvatar,
+            onPressed: _pickAndUploadAvatar,
             icon: const Icon(Icons.camera_alt_rounded, size: 20),
             label: const Text('Изменить'),
           ),

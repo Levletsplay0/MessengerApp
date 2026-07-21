@@ -3,6 +3,7 @@ import 'package:flutter_application_1/screens/login_screen.dart';
 import 'package:flutter_application_1/providers/theme_provider.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -246,7 +247,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     children: [
                       ListTile(
                         leading: Icon(
-                          Icons.cleaning_services_outlined,
+                          LucideIcons.eraser,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         title: const Text('Очистить кэш'),
@@ -267,6 +268,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           'Выйти из аккаунта',
                           style: TextStyle(color: Colors.red),
                         ),
+                        subtitle: const Text('Полный выход из аккаунта'),
                         trailing: const Icon(
                           Icons.arrow_forward_ios,
                           size: 16,

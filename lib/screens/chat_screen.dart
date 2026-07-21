@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_application_1/screens/group_info_screen.dart';
 import 'package:flutter_application_1/screens/users_profile_screen.dart';
 import 'package:flutter_application_1/widgets/message_content.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -35,6 +36,7 @@ class _ChatScreenState extends State<ChatScreen> {
   static const String _baseUrl = 'http://45.132.255.102:8000';
 
   final TextEditingController _messageController = TextEditingController();
+  final FocusNode _messageFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
   final ApiService _apiService = ApiService();
   final WebSocketService _wsService = WebSocketService();
@@ -92,7 +94,6 @@ class _ChatScreenState extends State<ChatScreen> {
       _isLocalUserTyping = true;
     }
 
-    // Сбрасываем таймер при каждом новом нажатии
     _typingDebounceTimer?.cancel();
     _typingDebounceTimer = Timer(const Duration(seconds: 2), () {
       _stopTyping();
@@ -518,7 +519,7 @@ class _ChatScreenState extends State<ChatScreen> {
               if (hasFile)
                 ListTile(
                   leading: Icon(
-                    Icons.download_outlined,
+                    LucideIcons.arrowDownToLine,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   title: const Text('Скачать файл'),
@@ -532,7 +533,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 const Divider(height: 1),
                 ListTile(
                   leading: Icon(
-                    Icons.edit_rounded,
+                    Icons.edit_outlined,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   title: const Text('Редактировать'),
@@ -543,7 +544,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 ListTile(
                   leading: const Icon(
-                    Icons.delete_rounded,
+                    Icons.delete_outline_rounded,
                     color: Colors.redAccent,
                   ),
                   title: const Text(
@@ -628,12 +629,6 @@ class _ChatScreenState extends State<ChatScreen> {
               final newContent = controller.text.trim();
               if (newContent.isNotEmpty) {
                 _wsService.editMessage(message['id'], newContent);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Сообщение обновлено'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
               }
               Navigator.pop(context);
             },
@@ -683,12 +678,6 @@ class _ChatScreenState extends State<ChatScreen> {
       }
 
       _wsService.deleteMessage(messageId);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Сообщение удалено'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
     }
   }
 
@@ -802,6 +791,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _wsService.disconnect();
     _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
+    _messageFocusNode.dispose();
     _scrollController.dispose();
     _typingDebounceTimer?.cancel();
     super.dispose();
@@ -1239,13 +1229,7 @@ class _ChatScreenState extends State<ChatScreen> {
             const SizedBox(width: 8),
             GestureDetector(
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Это вы! 😊", style: TextStyle(fontSize: 16)),
-                    duration: const Duration(seconds: 1),
-                    backgroundColor: Colors.blue,
-                  ),
-                );
+                print("Это вы");
               },
               child: _buildUserAvatar(message),
             ),
@@ -1518,9 +1502,10 @@ class _ChatScreenState extends State<ChatScreen> {
             iconTheme: const IconThemeData(color: Colors.white),
             actions: [
               IconButton(
-                icon: const Icon(Icons.download_rounded),
+                icon: const Icon(LucideIcons.arrowDownToLine),
                 onPressed: () => _downloadFile(filePath),
               ),
+              SizedBox(width: 5,)
             ],
           ),
           body: Center(
@@ -1683,32 +1668,18 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
       child: SafeArea(
-        top: false,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
             if (_selectedFile != null) _buildSelectedFilePreview(),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                _buildCircleButton(
-                  onTap: _pickFile,
-                  child: Icon(
-                    _selectedFile != null
-                        ? Icons.file_copy
-                        : Icons.attach_file_rounded,
-                    size: 20,
-                  ),
-                ),
-
-                const SizedBox(width: 6),
                 Expanded(
                   child: TextField(
+                    focusNode: _messageFocusNode,
                     controller: _messageController,
                     textCapitalization: TextCapitalization.sentences,
                     maxLines: 6,
                     minLines: 1,
-                    textInputAction: TextInputAction.newline,
                     decoration: InputDecoration(
                       hintText: _isConnectedToInternet
                           ? 'Сообщение...'
@@ -1717,16 +1688,38 @@ class _ChatScreenState extends State<ChatScreen> {
                         color: _isConnectedToInternet
                             ? Colors.grey[500]
                             : Colors.redAccent,
-                        fontSize: 15,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold
                       ),
                       isDense: true,
+                      fillColor: Colors.transparent,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                        borderSide: BorderSide(color: Colors.blue.withValues(alpha: 0.3), width: 2.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                        borderSide: BorderSide(color: Colors.blue.withValues(alpha: 0.3), width: 2.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                        borderSide: BorderSide(color: Colors.blue.withValues(alpha: 0.3), width: 2.0),
+                      ),
                     ),
                     enabled: _isConnectedToInternet,
                   ),
                 ),
-
                 const SizedBox(width: 6),
-
+                _buildCircleButton(
+                  onTap: _pickFile,
+                  child: Icon(
+                    _selectedFile != null
+                        ? LucideIcons.file
+                        : LucideIcons.filePlusCorner,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 6),
                 _buildCircleButton(
                   onTap: _isSending || !_isConnectedToInternet
                       ? null
@@ -1741,7 +1734,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                         )
                       : Icon(
-                          Icons.send_rounded,
+                          LucideIcons.sendHorizontal,
                           size: 20,
                           color: _isConnectedToInternet ? null : Colors.grey,
                         ),
@@ -1759,8 +1752,8 @@ class _ChatScreenState extends State<ChatScreen> {
     required Widget child,
   }) {
     return Container(
-      width: 40,
-      height: 40,
+      width: 45,
+      height: 45,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
@@ -1897,4 +1890,5 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
+
 }
