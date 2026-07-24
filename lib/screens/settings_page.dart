@@ -122,15 +122,7 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
-              Text(
-                'Настройки',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 24),
-
+              const SizedBox(height: 25),
               _buildSectionTitle('Внешний вид'),
               const SizedBox(height: 12),
               Card(
@@ -158,7 +150,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           themeProvider.toggleTheme(value);
                         },
                         secondary: Icon(
-                          isLight ? Icons.light_mode : Icons.dark_mode,
+                          isLight ? LucideIcons.sun : LucideIcons.moon,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
@@ -180,10 +172,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      // Версия
                       ListTile(
                         leading: Icon(
-                          Icons.info_outline,
+                          LucideIcons.info,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         title: const Text('Версия приложения'),
@@ -193,7 +184,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                       ListTile(
                         leading: Icon(
-                          Icons.devices,
+                          LucideIcons.monitorSmartphone,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         title: const Text('Платформа'),
@@ -203,7 +194,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                       ListTile(
                         leading: Icon(
-                          Icons.code,
+                          LucideIcons.panelsTopLeft,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         title: const Text('Frontend репозиторий'),
@@ -217,7 +208,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                       ListTile(
                         leading: Icon(
-                          Icons.dns,
+                          LucideIcons.server,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         title: const Text('Backend репозиторий'),

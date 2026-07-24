@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/edit_description_page.dart';
 import 'package:flutter_application_1/services/api_service.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -269,7 +270,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Padding(
                 padding: const EdgeInsets.only(right: 8, left: 8),
                 child: OutlinedButton.icon(
-                  icon: const Icon(Icons.image),
+                  icon: const Icon(LucideIcons.image),
                   onPressed: _pickAndUploadImage,
                   style: OutlinedButton.styleFrom(
                     elevation: 2,
@@ -277,12 +278,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
+                    foregroundColor: Colors.blue
                   ),
                   label: const Text(
                     "Изменить фото",
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold
+                    ),
                   ),
                 ),
               ),
@@ -291,7 +293,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Padding(
                 padding: const EdgeInsets.only(left: 8, right: 8),
                 child: OutlinedButton.icon(
-                  icon: const Icon(Icons.delete_outline),
+                  icon: const Icon(LucideIcons.trash2),
                   onPressed: _deleteAvatar,
                   style: OutlinedButton.styleFrom(
                     elevation: 2,
@@ -299,12 +301,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
+                    foregroundColor: Colors.red
                   ),
                   label: const Text(
                     "Удалить фото",
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold
+                    ),
                   ),
                 ),
               ),
@@ -320,16 +323,20 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildInfoRow(
-                  Icons.person_outline,
+                  LucideIcons.user,
                   _username,
                   'Имя пользователя',
                 ),
                 const Divider(),
-                _buildInfoRow(Icons.email_outlined, _email, 'Почта'),
+                _buildInfoRow(
+                  LucideIcons.mail, 
+                  _email, 
+                  'Почта'
+                ),
                 const Divider(),
                 _buildInfoRow(
-                  Icons.description_outlined,
-                  _description ?? 'Не указано',
+                  LucideIcons.bookUser,
+                  _description ?? '...',
                   'Описание',
                   onEdit: _navigateToEditDescription,
                 ),
@@ -352,7 +359,7 @@ class _ProfilePageState extends State<ProfilePage> {
             : null,
         child: hasAvatar
             ? null
-            : const Icon(Icons.group, size: 50, color: Colors.grey),
+            : const Icon(LucideIcons.user, size: 50),
       ),
     );
   }

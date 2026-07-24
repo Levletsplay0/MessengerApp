@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/add_members_screen.dart';
-import 'package:flutter_application_1/screens/chats_screen.dart';
+import 'package:flutter_application_1/screens/chats_page.dart';
 import 'package:flutter_application_1/screens/users_profile_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -581,7 +581,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
             ? NetworkImage("$_baseURL$_avatarPath") as ImageProvider
             : null,
         child: _avatarPath.isEmpty
-            ? const Icon(Icons.group, size: 50, color: Colors.grey)
+            ? const Icon(LucideIcons.users, size: 50)
             : null,
       ),
     );
@@ -770,7 +770,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
 
       items.add(
         _buildInfoRow(
-          Icons.person,
+          LucideIcons.user,
           username,
           'Присоединился: $joinedAt',
           avatarPath: avatarPath,
