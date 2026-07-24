@@ -5,6 +5,7 @@ import 'package:flutter_application_1/screens/add_members_screen.dart';
 import 'package:flutter_application_1/screens/chats_screen.dart';
 import 'package:flutter_application_1/screens/users_profile_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GroupInfoPage extends StatefulWidget {
@@ -439,13 +440,13 @@ class _GroupInfoPage extends State<GroupInfoPage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            Icon(Icons.warning_rounded, color: Colors.orange),
+            Icon(Icons.warning_rounded, color: Colors.red),
             SizedBox(width: 8),
-            Text('Выйти из группы?'),
+            Text('Удалить группу?'),
           ],
         ),
         content: const Text(
-          'Вы покидаете эту группу. Это действие нельзя отменить.',
+          'Все сообщения и участники будут удалени безвозвратно.',
         ),
         actions: [
           TextButton(
@@ -591,21 +592,27 @@ class _GroupInfoPage extends State<GroupInfoPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         SizedBox(
-          height: 50,
+          height: 40,
           child: OutlinedButton.icon(
             onPressed: _pickAndUploadAvatar,
-            icon: const Icon(Icons.camera_alt_rounded, size: 20),
+            icon: const Icon(LucideIcons.switchCamera, size: 20),
             label: const Text('Изменить'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.blue,
+            )
           ),
         ),
         if (_avatarPath.isNotEmpty) ...[
           const SizedBox(width: 12),
           SizedBox(
-            height: 50,
+            height: 40,
             child: OutlinedButton.icon(
               onPressed: _confirmDeleteAvatar,
-              icon: const Icon(Icons.delete_rounded, size: 20),
+              icon: const Icon(LucideIcons.trash2, size: 20),
               label: const Text('Удалить'),
+              style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.red,
+            )
             ),
           ),
         ],
@@ -626,7 +633,16 @@ class _GroupInfoPage extends State<GroupInfoPage> {
           ),
         ),
         const SizedBox(width: 12),
-        IconButton(icon: const Icon(Icons.edit), onPressed: _editGroupName),
+        SizedBox(
+          width: 30,
+          height: 30,
+          child: IconButton(
+            icon: const Icon(Icons.edit, size: 20,), 
+            onPressed: _editGroupName,
+            padding: EdgeInsets.zero,
+          ),
+        )
+        
       ],
     );
   }
@@ -661,28 +677,34 @@ class _GroupInfoPage extends State<GroupInfoPage> {
           Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 30,
+                height: 30,
                 decoration: BoxDecoration(
                   color: Colors.blue,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.description_rounded),
+                child: const Icon(Icons.description_rounded, size: 20,),
               ),
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
                   'Описание',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.edit_rounded),
-                onPressed: _editGroupDescription,
-              ),
+              SizedBox(
+                width: 30,
+                height: 30,
+                child: IconButton(
+                  icon: const Icon(Icons.edit_rounded, size: 20,),
+                  onPressed: _editGroupDescription,
+                  padding: EdgeInsets.zero,
+                ),
+              )
+              
             ],
           ),
-          const Divider(),
+          const Divider(height: 15),
           SelectionArea(
             child: Text(
               _description,
@@ -709,8 +731,9 @@ class _GroupInfoPage extends State<GroupInfoPage> {
                   onPressed: _openAddMembers,
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                    foregroundColor: Colors.blue
                   ),
                   child: const Text("Добавить участников"),
                 ),
@@ -829,7 +852,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
         if (onEdit != null)
           OutlinedButton.icon(
             onPressed: onEdit,
-            icon: const Icon(Icons.group_remove_outlined, size: 16),
+            icon: const Icon(LucideIcons.userX, size: 16),
             label: const Text("Кик"),
             style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
           ),
