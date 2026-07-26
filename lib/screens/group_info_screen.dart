@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/add_members_screen.dart';
-import 'package:flutter_application_1/screens/chats_page.dart';
+import 'package:flutter_application_1/screens/main_screen.dart';
 import 'package:flutter_application_1/screens/users_profile_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -485,7 +485,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
             );
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => ChatsScreen()),
+              MaterialPageRoute(builder: (context) => MainScreen()),
               (route) => false,
             );
           }

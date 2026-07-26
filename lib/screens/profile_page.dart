@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screens/edit_description_page.dart';
+import 'package:flutter_application_1/screens/edit_description_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -407,7 +407,7 @@ class _ProfilePageState extends State<ProfilePage> {
       context,
       MaterialPageRoute(
         builder: (context) =>
-            EditDescriptionPage(currentDescription: _description ?? ''),
+            EditDescriptionScreen(currentDescription: _description ?? ''),
       ),
     );
 

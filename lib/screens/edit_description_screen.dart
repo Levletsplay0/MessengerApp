@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 
-class EditDescriptionPage extends StatefulWidget {
+class EditDescriptionScreen extends StatefulWidget {
   final String currentDescription;
 
-  const EditDescriptionPage({super.key, required this.currentDescription});
+  const EditDescriptionScreen({super.key, required this.currentDescription});
 
   @override
-  State<EditDescriptionPage> createState() => _EditDescriptionPageState();
+  State<EditDescriptionScreen> createState() => _EditDescriptionScreenState();
 }
 
-class _EditDescriptionPageState extends State<EditDescriptionPage> {
+class _EditDescriptionScreenState extends State<EditDescriptionScreen> {
   late TextEditingController _controller;
   bool _isLoading = false;
 

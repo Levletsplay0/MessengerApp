@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login_screen.dart';
-import 'screens/chats_page.dart';
+import 'screens/main_screen.dart';
 import 'theme/app_theme.dart';
 import 'providers/theme_provider.dart';
 
@@ -59,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (token != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const ChatsScreen()),
+        MaterialPageRoute(builder: (context) => const MainScreen()),
       );
     } else {
       Navigator.pushReplacement(

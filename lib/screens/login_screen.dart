@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_application_1/screens/chats_page.dart';
+import 'package:flutter_application_1/screens/main_screen.dart';
 import 'register_screen.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const ChatsScreen()),
+          MaterialPageRoute(builder: (context) => const MainScreen()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

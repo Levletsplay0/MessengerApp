@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_application_1/services/api_service.dart';
 
-class CreateGroupPage extends StatefulWidget {
-  const CreateGroupPage({super.key});
+class CreateGroupScreen extends StatefulWidget {
+  const CreateGroupScreen({super.key});
 
   @override
-  State<CreateGroupPage> createState() => _CreateGroupPageState();
+  State<CreateGroupScreen> createState() => _CreateGroupScreenState();
 }
 
-class _CreateGroupPageState extends State<CreateGroupPage> {
+class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final _nameController = TextEditingController();
   bool _isLoading = false;
 
