@@ -139,7 +139,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         subtitle: Text(
                           isLight
                               ? 'Включена светлая тема'
-                              : 'Включена темная тема',
+                              : 'Включена тёмная тема',
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(context).textTheme.bodySmall?.color,

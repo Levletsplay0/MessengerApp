@@ -1,9 +1,9 @@
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screens/edit_description_screen.dart';
+import 'package:flutter_application_1/screens/edit_profile_screen.dart';
 import 'package:flutter_application_1/services/api_service.dart';
+import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,8 +24,11 @@ class _ProfilePageState extends State<ProfilePage> {
   String _name = '';
   String _lastName = '';
   String? _avatarPath;
-  String? _description;
+  String _description = '';
+  String? _dateOfBirth;
+
   final String _baseURL = "http://45.132.255.102:8000/";
+
 
   @override
   void initState() {
@@ -71,6 +74,7 @@ class _ProfilePageState extends State<ProfilePage> {
           _lastName = data["last_name"] ?? '';
           _avatarPath = data["avatar_path"];
           _description = data["description"];
+          _dateOfBirth = data["date_of_birth"];
           _isLoading = false;
         });
       } else {
@@ -336,10 +340,25 @@ class _ProfilePageState extends State<ProfilePage> {
                 const Divider(),
                 _buildInfoRow(
                   LucideIcons.bookUser,
-                  _description ?? '...',
+                  _description,
                   'Описание',
-                  onEdit: _navigateToEditDescription,
                 ),
+                const Divider(),
+                _buildInfoRow(
+                  LucideIcons.calendarFold,
+                  (_dateOfBirth == null || _dateOfBirth!.isEmpty)
+                      ? 'Не указана'
+                      : DateFormat('dd.MM.yyyy').format(DateTime.parse(_dateOfBirth!)),
+                  'Дата рождения',
+                ),
+                const Divider(),
+                Center(
+                  child: OutlinedButton.icon(
+                    onPressed: _navigateToEditProfile, 
+                    label: Text("Редактировать профиль"), 
+                    icon: Icon(LucideIcons.squarePen),
+                  ),
+                )
               ],
             ),
           ),
@@ -364,15 +383,10 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildInfoRow(
-    IconData icon,
-    String value,
-    String label, {
-    VoidCallback? onEdit,
-  }) {
+  Widget _buildInfoRow(IconData icon, String value, String label, ) {
     return Row(
       children: [
-        Icon(icon, color: Colors.blue, size: 24),
+        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
@@ -392,28 +406,26 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
         ),
-        if (onEdit != null)
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: onEdit,
-            tooltip: 'Редактировать',
-          ),
       ],
     );
   }
 
-  void _navigateToEditDescription() async {
-    final result = await Navigator.push(
+  void _navigateToEditProfile() async {
+    Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            EditDescriptionScreen(currentDescription: _description ?? ''),
+        builder: (context) => EditProfileScreen(
+          currentName: _name,
+          currentLastName: _lastName,
+          currentDescription: _description,
+          currentDateOfBirth: _dateOfBirth,
+        ),
       ),
-    );
-
-    if (result == true && mounted) {
-      await _loadProfile();
-    }
+    ).then((result) {
+      if (result == true) {
+        _loadProfile();
+      }
+    });
   }
 
   void _showFullAvatar() {

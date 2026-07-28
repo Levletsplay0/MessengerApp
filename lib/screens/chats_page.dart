@@ -141,10 +141,10 @@ class _ChatsPageState extends State<ChatsPage> {
                 itemBuilder: (context, index) {
                   final chat = _chats[index];
                   final name = chat['name'] ?? 'Без названия';
-                  final lastMessage = chat['last_message']['content'] ?? 'Нет сообщений';
+                  final lastMessage = chat['last_message']?['content'] ?? 'Нет сообщений';
                   final avatarPath = chat['avatar_path'];
                   final groupId = chat['id'];
-                  final lastMessageUsername = chat['last_message']['author_username'] ?? 'Профиль недоступен';
+                  final lastMessageUsername = chat['last_message']?['author_username'] ?? 'Пользователь';
 
                   return ListTile(
                     leading: _buildAvatar(name, avatarPath),

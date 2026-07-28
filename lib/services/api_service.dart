@@ -120,25 +120,6 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> updateDescription(
-    String token,
-    String description,
-  ) async {
-    final Uri url = Uri.parse('$baseUrl/users/me/description');
-    try {
-      final response = await http.patch(
-        url,
-        headers: {'Content-Type': 'application/json', 'auth-token': token},
-        body: jsonEncode({"description": description}),
-      );
-      return jsonDecode(response.body);
-    } catch (e) {
-      throw Exception('Ошибка: $e');
-    }
-  }
-
-  // === Новые методы для чата ===
-
   Future<Map<String, dynamic>> getGroupDetails(
     String token,
     int groupId,
@@ -455,6 +436,48 @@ class ApiService {
       return jsonDecode(response.body);
     } catch (e) {
       throw Exception('Ошибка: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateProfile(
+    String token, {
+    String? name,
+    String? lastName,
+    String? description,
+    String? dateOfBirth,
+  }) async {
+    final Map<String, dynamic> body = {};
+    
+    if (name != null) body['name'] = name;
+    if (lastName != null) body['last_name'] = lastName;
+    if (description != null) body['description'] = description;
+    if (dateOfBirth != null) body['date_of_birth'] = dateOfBirth;
+
+    if (body.isEmpty) {
+      return {"success": true, "message": "Нет изменений для сохранения"};
+    }
+
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/users/me'),
+        headers: {
+          'accept': 'application/json',
+          'auth-token': token,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        return {
+          "success": false,
+          "message": "Ошибка сервера: ${response.statusCode}",
+        };
+      }
+    } catch (e) {
+      return {"success": false, "message": "Ошибка сети: $e"};
     }
   }
 }

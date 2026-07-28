@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
-import 'theme/app_theme.dart';
 import 'providers/theme_provider.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
@@ -20,15 +22,35 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return MaterialApp(
-          title: 'Messenger App',
-          //debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: themeProvider.themeMode,
-          home: const SplashScreen(),
+    return DynamicColorBuilder(
+      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+
+        final ColorScheme lightColorScheme = lightDynamic ?? ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
+        );
+
+        final ColorScheme darkColorScheme = darkDynamic ?? ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.dark,
+        );
+
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return MaterialApp(
+              title: 'Messenger App',
+              theme: ThemeData(
+                useMaterial3: true,
+                colorScheme: lightColorScheme,
+              ),
+              darkTheme: ThemeData(
+                useMaterial3: true,
+                colorScheme: darkColorScheme,
+              ),
+              themeMode: themeProvider.themeMode,
+              home: const SplashScreen(),
+            );
+          },
         );
       },
     );
@@ -79,6 +101,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Icon(
               Icons.chat_outlined,
               size: 100,
+              // Автоматически возьмет primary цвет из Dynamic Color!
               color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 24),
