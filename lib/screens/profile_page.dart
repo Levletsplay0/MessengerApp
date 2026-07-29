@@ -67,13 +67,13 @@ class _ProfilePageState extends State<ProfilePage> {
         }
         if (!mounted) return;
         setState(() {
-          _userId = data["id"] ?? '';
+          _userId = data["id"];
           _username = data["username"] ?? '';
           _email = data["email"] ?? '';
           _name = data["name"] ?? '';
           _lastName = data["last_name"] ?? '';
           _avatarPath = data["avatar_path"];
-          _description = data["description"];
+          _description = data["description"] ?? 'Не указано';
           _dateOfBirth = data["date_of_birth"];
           _isLoading = false;
         });

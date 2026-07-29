@@ -23,7 +23,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
   int _membersCount = 0;
   List<dynamic> _members = [];
   String? _createdAt = "?";
-  String _description = "Неизвестно";
+  String _description = "Пусто";
   String _avatarPath = "";
 
   final String _baseURL = "http://45.132.255.102:8000/";
@@ -107,7 +107,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
         setState(() {
           _isLoading = false;
           _groupName = data["name"] ?? "Неизвестно";
-          _description = data["description"] ?? "Неизвестно";
+          _description = data["description"] ?? "Пусто";
           _avatarPath = data["avatar_path"] ?? "";
           _createdAt = data["created_at"];
           _membersCount = data["member_count"];
@@ -271,12 +271,6 @@ class _GroupInfoPage extends State<GroupInfoPage> {
             child: const Text('Отмена'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: confirmColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(confirmText),
           ),
@@ -322,12 +316,6 @@ class _GroupInfoPage extends State<GroupInfoPage> {
             child: const Text('Отмена'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
             onPressed: () {
               final text = controller.text.trim();
               if (text.isEmpty) {
@@ -372,7 +360,7 @@ class _GroupInfoPage extends State<GroupInfoPage> {
   }
 
   Future<void> _editGroupDescription() async {
-    final initial = _description == "Неизвестно" ? "" : _description;
+    final initial = _description == "Пусто" ? "" : _description;
     final newDescription = await _showEditDialog(
       title: 'Смена описания',
       initialValue: initial,
@@ -454,14 +442,8 @@ class _GroupInfoPage extends State<GroupInfoPage> {
             child: const Text('Отмена'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Выйти'),
+            child: const Text('Удалить'),
           ),
         ],
       ),

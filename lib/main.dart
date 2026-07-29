@@ -101,7 +101,6 @@ class _SplashScreenState extends State<SplashScreen> {
             Icon(
               Icons.chat_outlined,
               size: 100,
-              // Автоматически возьмет primary цвет из Dynamic Color!
               color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 24),
